@@ -227,10 +227,6 @@ int main(void)
         basicShader.setMat4("uM", groundModel);
         view = glm::lookAt(cameraPos, cameraFront + cameraPos, cameraUp);
         basicShader.setMat4("uV", view);
-        // aktiviramo teksturu
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, groundTexture);
-        basicShader.setInt("useTex", 1);
         // crtanje ground-a
         ground.Draw(basicShader);
 
