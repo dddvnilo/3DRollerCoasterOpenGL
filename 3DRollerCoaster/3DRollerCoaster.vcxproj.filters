@@ -7,6 +7,9 @@
     <ClCompile Include="Util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ground.cpp">
+      <Filter>Source Files\Ground</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util.h">
@@ -23,6 +26,9 @@
     </ClInclude>
     <ClInclude Include="shader.hpp">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ground.hpp">
+      <Filter>Source Files\Ground</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -51,6 +57,9 @@
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{c5674299-b72b-4621-a278-46ac70f298ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Ground">
+      <UniqueIdentifier>{dd53b354-3b4f-42f7-8a67-a89f789eb43a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

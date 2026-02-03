@@ -1,4 +1,4 @@
-﻿ #include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <sstream>
 
@@ -11,15 +11,24 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Util.h"
+#include "shader.hpp"
+#include "model.hpp"
+
+// moji modeli
+#include "ground.hpp"
 
 bool useTex = false;
 bool transparent = false;
+
+// teksture
+unsigned int groundTexture;
 
 // prikaz
 float aspect;                   // aspect ratio
 int width, height;              // sirina i visina ekrana
 const double TARGET_FPS = 75.0;
 const double FRAME_TIME = 1.0 / TARGET_FPS;
+float fov = 45.0f;
 double lastFrameTime = glfwGetTime();
 
 // look around
@@ -86,16 +95,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     cameraFront = glm::normalize(direction);
 }
-float fov = 45.0f;
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    fov -= (float)yoffset;
-    if (fov < 1.0f)
-        fov = 1.0f;
-    if (fov > 45.0f)
-        fov = 45.0f;
-}
 
 int main(void)
 {
@@ -124,7 +123,6 @@ int main(void)
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetKeyCallback(window, keyCallback);
     glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
     
     if (window == NULL)
     {
@@ -144,129 +142,58 @@ int main(void)
     
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++ PROMJENLJIVE I BAFERI +++++++++++++++++++++++++++++++++++++++++++++++++
     
-    unsigned int unifiedShader = createShader("old.vert", "old.frag");
-    glUseProgram(unifiedShader);
-    glUniform1i(glGetUniformLocation(unifiedShader, "uTex"), 0);
+    Shader basicShader("basic.vert", "basic.frag");
 
-    unsigned int dice[6] = { };
-    for (int i = 0; i < 6; ++i) {
-        std::string path = "res/dice" + std::to_string(i + 1) + ".png";
-        dice[i] = preprocessTexture(path.c_str());
-    }
-
-    float vertices[] =
-    {
-      //X    Y    Z      R    G    B    A         S   T
-        // Prednja strana (1)
-        0.1, 0.1, 0.1,   1.0, 0.0, 0.0, 1.0,      0,  0,    0, 0, 1,
-       -0.1, 0.1, 0.1,   1.0, 0.0, 0.0, 1.0,      1,  0,    0, 0, 1,
-       -0.1,-0.1, 0.1,   1.0, 0.0, 0.0, 1.0,      1,  1,    0, 0, 1,
-        0.1,-0.1, 0.1,   1.0, 0.0, 0.0, 1.0,      0,  1,    0, 0, 1,
-       
-        // Leva strana (2)
-       -0.1, 0.1, 0.1,   0.0, 0.0, 1.0, 1.0,      0,  0,    -1, 0, 0,
-       -0.1, 0.1,-0.1,   0.0, 0.0, 1.0, 1.0,      1,  0,    -1, 0, 0,
-       -0.1,-0.1,-0.1,   0.0, 0.0, 1.0, 1.0,      1,  1,    -1, 0, 0,
-       -0.1,-0.1, 0.1,   0.0, 0.0, 1.0, 1.0,      0,  1,    -1, 0, 0,
-       
-        // Donja strana (3)
-        0.1,-0.1, 0.1,   1.0, 1.0, 1.0, 1.0,      0,  0,    0, -1, 0,
-       -0.1,-0.1, 0.1,   1.0, 1.0, 1.0, 1.0,      1,  0,    0, -1, 0,
-       -0.1,-0.1,-0.1,   1.0, 1.0, 1.0, 1.0,      1,  1,    0, -1, 0,
-        0.1,-0.1,-0.1,   1.0, 1.0, 1.0, 1.0,      0,  1,    0, -1, 0,
-
-        // Gornja strana (4)
-        0.1, 0.1, 0.1,   1.0, 1.0, 0.0, 1.0,      0,  0,    0, 1, 0,
-        0.1, 0.1,-0.1,   1.0, 1.0, 0.0, 1.0,      1,  0,    0, 1, 0,
-       -0.1, 0.1,-0.1,   1.0, 1.0, 0.0, 1.0,      1,  1,    0, 1, 0,
-       -0.1, 0.1, 0.1,   1.0, 1.0, 0.0, 1.0,      0,  1,    0, 1, 0,
-
-        // Desna strana (5)
-        0.1, 0.1, 0.1,   0.0, 1.0, 0.0, 1.0,      0,  0,    1, 0, 0,
-        0.1,-0.1, 0.1,   0.0, 1.0, 0.0, 1.0,      1,  0,    1, 0, 0,
-        0.1,-0.1,-0.1,   0.0, 1.0, 0.0, 1.0,      1,  1,    1, 0, 0,
-        0.1, 0.1,-0.1,   0.0, 1.0, 0.0, 1.0,      0,  1,    1, 0, 0,
-        
-        // Zadnja strana (6)
-        0.1, 0.1,-0.1,   1.0, 0.5, 0.0, 1.0,      0,  0,    0, 0, -1,
-        0.1,-0.1,-0.1,   1.0, 0.5, 0.0, 1.0,      1,  0,    0, 0, -1,
-       -0.1,-0.1,-0.1,   1.0, 0.5, 0.0, 1.0,      1,  1,    0, 0, -1,
-       -0.1, 0.1,-0.1,   1.0, 0.5, 0.0, 1.0,      0,  1,    0, 0, -1,
-    };
-    unsigned int stride = (3 + 4 + 2 + 3) * sizeof(float); 
+    // ucitavanje tekstura
+    groundTexture = preprocessTexture("res/grass.jpg");
     
-    unsigned int VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    glClearColor(0.53f, 0.81f, 0.92f, 1.0f); // nebo
+    glCullFace(GL_BACK);// biranje lica koje ce se eliminisati (tek nakon sto ukljucimo Face Culling)
 
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(7 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, (void*)(10 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-    
-
-    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++            UNIFORME            +++++++++++++++++++++++++++++++++++++++++++++++++
-
-    glm::mat4 model = glm::mat4(1.0f); //Matrica transformacija - mat4(1.0f) generise jedinicnu matricu
-    unsigned int modelLoc = glGetUniformLocation(unifiedShader, "uM");
-    
-    glm::mat4 view; //Matrica pogleda (kamere)
-    glm::vec3 cameraPos = glm::vec3(0.0, 0.0, 2.0);
+    basicShader.use();
+    basicShader.setVec3("uLightPos", 0, 5, 3);
+    basicShader.setVec3("uViewPos", 0, 0, 5);
+    basicShader.setVec3("uLightColor", 1, 1, 1);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
+    basicShader.setMat4("uP", projection);
+    glm::vec3 cameraPos = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0);
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront,cameraUp);
+    basicShader.setMat4("uV", view);
+    glm::mat4 model = glm::mat4(1.0f);
+    basicShader.setMat4("uM", model);
+    glm::mat4 projectionP = glm::perspective(glm::radians(fov), aspect, 0.1f, 100.0f);
+    basicShader.setMat4("uP", projectionP);
 
-    view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp); // lookAt(Gdje je kamera, u sta kamera gleda, jedinicni vektor pozitivne Y ose svijeta  - ovo rotira kameru)
-    unsigned int viewLoc = glGetUniformLocation(unifiedShader, "uV");
-    
-    
-    glm::mat4 projectionP = glm::perspective(glm::radians(fov), aspect, 0.1f, 100.0f); //Matrica perspektivne projekcije (FOV, Aspect Ratio, prednja ravan, zadnja ravan)
-    glm::mat4 projectionO = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f); //Matrica ortogonalne projekcije (Lijeva, desna, donja, gornja, prednja i zadnja ravan)
-    unsigned int projectionLoc = glGetUniformLocation(unifiedShader, "uP");
+    // kreiranje ground-a: sirina=50, duzina=50, subdivisions=50, tekstura
+    Ground ground(50.0f, 50.0f, 50, groundTexture);
 
-
-    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++ RENDER LOOP - PETLJA ZA CRTANJE +++++++++++++++++++++++++++++++++++++++++++++++++
-    glUseProgram(unifiedShader); //Slanje default vrijednosti uniformi
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model)); //(Adresa matrice, broj matrica koje saljemo, da li treba da se transponuju, pokazivac do matrica)
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionO));
-    glBindVertexArray(VAO);
-
-    glClearColor(0.5, 0.5, 0.5, 1.0);
-    glCullFace(GL_BACK);//Biranje lica koje ce se eliminisati (tek nakon sto ukljucimo Face Culling)
+    glEnable(GL_DEPTH_TEST); // inicijalno ukljucivanje Z bafera (kasnije mozemo da iskljucujemo i opet ukljucujemo)
 
     while (!glfwWindowShouldClose(window))
     {
         double startTime = glfwGetTime();
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // osvezavamo i Z bafer i bafer boje
+
+        // izlaz na ESC
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         {
             glfwSetWindowShouldClose(window, GL_TRUE);
         }
 
-        //Testiranje dubine
+        // testiranje dubine
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
         {
-            glEnable(GL_DEPTH_TEST); //Ukljucivanje testiranja Z bafera
+            glEnable(GL_DEPTH_TEST); // ukljucivanje testiranja Z bafera
         }
         if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
         {
             glDisable(GL_DEPTH_TEST);
         }
 
-        //Odstranjivanje lica (Prethodno smo podesili koje lice uklanjamo sa glCullFace)
+        // (back)face culling
         if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
         {
             glEnable(GL_CULL_FACE);
@@ -276,32 +203,7 @@ int main(void)
             glDisable(GL_CULL_FACE);
         }
 
-        //Transformisanje trouglova
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        {
-            //model = glm::translate(model, glm::vec3(-0.01, 0.0, 0.0)); //Pomjeranje (Matrica transformacije, pomjeraj po XYZ)
-            model = glm::rotate(model, glm::radians(-0.5f), glm::vec3(0.0f, 1.0f, 0.0f)); //Rotiranje (Matrica transformacije, ugao rotacije u radijanima, osa rotacije)
-            //model = glm::scale(model, glm::vec3(0.99, 1.0, 1.0)); //Skaliranje (Matrica transformacije, skaliranje po XYZ)
-        }
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        {
-            //model = glm::translate(model, glm::vec3(0.01, 0.0, 0.0));
-            model = glm::rotate(model, glm::radians(0.5f), glm::vec3(0.0f, 1.0f, 0.0f));
-            //model = glm::scale(model, glm::vec3(1.01, 1.0, 1.0));
-        }
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        {
-            //model = glm::translate(model, glm::vec3(0.0, 0.01, 0.0));
-            model = glm::rotate(model, glm::radians(-0.5f), glm::vec3(1.0f, 0.0f, 1.0f));
-            //model = glm::scale(model, glm::vec3(1.0, 1.01, 1.0));
-        }
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        {
-            //model = glm::translate(model, glm::vec3(0.0, -0.01, 0.0));
-            model = glm::rotate(model, glm::radians(0.5f), glm::vec3(1.0f, 0.0f, 1.0f));
-            //model = glm::scale(model, glm::vec3(1.0, 0.99, 1.0));
-        }
-
+        // walk around camera
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
         {   
             cameraPos += 0.01f * glm::normalize(glm::vec3(cameraFront.z, 0, -cameraFront.x));
@@ -319,36 +221,23 @@ int main(void)
             cameraPos -= 0.01f * glm::normalize(glm::vec3(cameraFront.x, 0, cameraFront.z));
         }
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Osvjezavamo i Z bafer i bafer boje
-        
-        glUseProgram(unifiedShader);
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-        projectionP = glm::perspective(glm::radians(fov), aspect, 0.1f, 100.0f);
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionP));
-
-        glUniform1i(glGetUniformLocation(unifiedShader, "useTex"), useTex);
-        glUniform1i(glGetUniformLocation(unifiedShader, "transparent"), transparent);
+        // CRTANJE GROUND-A
+        basicShader.use();
+        glm::mat4 groundModel = glm::mat4(1.0f);
+        basicShader.setMat4("uM", groundModel);
+        view = glm::lookAt(cameraPos, cameraFront + cameraPos, cameraUp);
+        basicShader.setMat4("uV", view);
+        // aktiviramo teksturu
         glActiveTexture(GL_TEXTURE0);
-        for (int i = 0; i < 6; ++i) {
-            glBindTexture(GL_TEXTURE_2D, dice[i]);
-            glDrawArrays(GL_TRIANGLE_FAN, i * 4, 4);
-        }
+        glBindTexture(GL_TEXTURE_2D, groundTexture);
+        basicShader.setInt("useTex", 1);
+        // crtanje ground-a
+        ground.Draw(basicShader);
 
         while (glfwGetTime() - startTime < 1.0 / 60) {}
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++ POSPREMANJE +++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-    glDeleteBuffers(1, &VBO);
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteProgram(unifiedShader);
 
     glfwTerminate();
     return 0;

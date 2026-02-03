@@ -1,6 +1,5 @@
 #ifndef MODEL_H
 #define MODEL_H
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 #include <GL/glew.h> 
@@ -189,7 +188,7 @@ private:
 
 
 
-unsigned int TextureFromFile(const char* path, const string& directory, bool gamma)
+inline unsigned int TextureFromFile(const char* path, const string& directory, bool gamma)
 {
     string filename = string(path);
     filename = directory + '/' + filename;
