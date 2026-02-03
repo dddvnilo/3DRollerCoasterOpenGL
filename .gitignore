@@ -7,20 +7,27 @@
 *.sdf
 *.db
 
-# Build / bin / obj
-/build/
+# Build output
+x64/
 bin/
 obj/
 *.exe
 *.dll
 *.o
 *.obj
+*.pdb
+*.ilk
+*.log
+*.tlog/
 
 # CMake
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
+
+# NuGet packages
+packages/
 
 # OS files
 .DS_Store
