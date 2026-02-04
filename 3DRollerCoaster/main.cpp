@@ -16,12 +16,14 @@
 
 // moji modeli
 #include "ground.hpp"
+#include "rollercoaster.hpp"
 
 bool useTex = false;
-bool transparent = false;
+bool transparent = true;
 
 // teksture
 unsigned int groundTexture;
+unsigned int woodTexture;
 
 // prikaz
 float aspect;                   // aspect ratio
@@ -148,6 +150,7 @@ int main(void)
 
     // ucitavanje tekstura
     groundTexture = preprocessTexture("res/grass.jpg");
+    woodTexture = preprocessTexture("res/wood.jpg");
     
     glClearColor(0.53f, 0.81f, 0.92f, 1.0f); // nebo
     glCullFace(GL_BACK);// biranje lica koje ce se eliminisati (tek nakon sto ukljucimo Face Culling)
@@ -169,8 +172,19 @@ int main(void)
 
     // kreiranje ground-a: sirina=50, duzina=50, subdivisions=50, tekstura
     Ground ground(50.0f, 50.0f, 30, groundTexture);
+    RollerCoaster rollercoaster(
+        40.0f,  // dužina
+        2.0f,   // početna visina
+        4.0f,   // amplitude
+        3,      // brda
+        1.2f,   // širina šina
+        0.15f,  // debljina samog rail-a
+        200,     // rezolucija,
+        woodTexture
+    );
 
     glEnable(GL_DEPTH_TEST); // inicijalno ukljucivanje Z bafera (kasnije mozemo da iskljucujemo i opet ukljucujemo)
+    glEnable(GL_CULL_FACE); // inicijalno ukljucivanje (back)face culling-a
 
     while (!glfwWindowShouldClose(window))
     {
@@ -230,7 +244,8 @@ int main(void)
         basicShader.setMat4("uV", view);
         // crtanje ground-a
         ground.Draw(basicShader);
-
+        // crtanje rolerkostera
+        rollercoaster.Draw(basicShader);
         while (glfwGetTime() - startTime < 1.0 / 60) {}
         glfwSwapBuffers(window);
         glfwPollEvents();

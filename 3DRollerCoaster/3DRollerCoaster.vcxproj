@@ -144,19 +144,19 @@
   <ItemGroup>
     <ClCompile Include="ground.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="rollercoaster.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="basic.frag" />
     <None Include="basic.vert" />
-    <None Include="old.frag" />
-    <None Include="old.vert" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ground.hpp" />
     <ClInclude Include="mesh.hpp" />
     <ClInclude Include="model.hpp" />
+    <ClInclude Include="rollercoaster.hpp" />
     <ClInclude Include="shader.hpp" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Util.h" />

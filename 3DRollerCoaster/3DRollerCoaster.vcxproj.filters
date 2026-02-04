@@ -10,6 +10,9 @@
     <ClCompile Include="ground.cpp">
       <Filter>Source Files\Ground</Filter>
     </ClCompile>
+    <ClCompile Include="rollercoaster.cpp">
+      <Filter>Source Files\RollerCoaster</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util.h">
@@ -30,16 +33,13 @@
     <ClInclude Include="ground.hpp">
       <Filter>Source Files\Ground</Filter>
     </ClInclude>
+    <ClInclude Include="rollercoaster.hpp">
+      <Filter>Source Files\RollerCoaster</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="old.vert">
-      <Filter>Source Files\Shader Files</Filter>
-    </None>
     <None Include="packages.config">
       <Filter>Source Files</Filter>
-    </None>
-    <None Include="old.frag">
-      <Filter>Source Files\Shader Files</Filter>
     </None>
     <None Include="basic.vert">
       <Filter>Source Files\Shader Files</Filter>
@@ -60,6 +60,9 @@
     </Filter>
     <Filter Include="Source Files\Ground">
       <UniqueIdentifier>{dd53b354-3b4f-42f7-8a67-a89f789eb43a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\RollerCoaster">
+      <UniqueIdentifier>{f8aa6c2f-010e-4048-bc95-78e685852f90}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
