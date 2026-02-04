@@ -24,6 +24,7 @@ bool transparent = true;
 // teksture
 unsigned int groundTexture;
 unsigned int woodTexture;
+unsigned int metalTexture;
 
 // prikaz
 float aspect;                   // aspect ratio
@@ -151,6 +152,7 @@ int main(void)
     // ucitavanje tekstura
     groundTexture = preprocessTexture("res/grass.jpg");
     woodTexture = preprocessTexture("res/wood.jpg");
+    metalTexture = preprocessTexture("res/metal.jpg");
     
     glClearColor(0.53f, 0.81f, 0.92f, 1.0f); // nebo
     glCullFace(GL_BACK);// biranje lica koje ce se eliminisati (tek nakon sto ukljucimo Face Culling)
@@ -180,6 +182,7 @@ int main(void)
         1.2f,   // širina šina
         0.15f,  // debljina samog rail-a
         200,     // rezolucija,
+        metalTexture,
         woodTexture
     );
 

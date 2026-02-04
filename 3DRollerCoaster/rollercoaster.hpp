@@ -13,7 +13,8 @@ public:
         float trackWidth,
         float railThickness,
         int samples,
-        unsigned int texID
+        unsigned int railTexID,
+        unsigned int woodTexID
     );
 
 private:
@@ -24,13 +25,14 @@ private:
     int hills;
     float trackWidth;
     float railThickness;
+    unsigned int railTexID;
+    unsigned int woodTexID;
     int samples;
 
     // path
     glm::vec3 getPoint(float t);
     glm::vec3 getTangent(float t);
 
-    void addTexture(unsigned int texID);
     void generateRails();
     void generateSleepers();
 };

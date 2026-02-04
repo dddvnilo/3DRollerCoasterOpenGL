@@ -8,7 +8,8 @@ RollerCoaster::RollerCoaster(
     float trackWidth,
     float railThickness,
     int samples,
-    unsigned int texID
+    unsigned int railTexID,
+    unsigned int woodTexID
 ) : Model(""),
 length(length),
 baseHeight(baseHeight),
@@ -16,22 +17,15 @@ amplitude(amplitude),
 hills(hills),
 trackWidth(trackWidth),
 railThickness(railThickness),
+railTexID(railTexID),
+woodTexID(woodTexID),
 samples(samples)
 {
     meshes.clear();
     textures_loaded.clear();
 
-    addTexture(texID);
     generateRails();
     generateSleepers();
-}
-
-void RollerCoaster::addTexture(unsigned int texID) {
-    Texture tex;
-    tex.id = texID;
-    tex.type = "uDiffMap";
-    tex.path = "";
-    textures_loaded.push_back(tex);
 }
 
 // ================= PATH =================
@@ -134,7 +128,13 @@ void RollerCoaster::generateRails() {
             }
         }
 
-        Mesh metalMesh(metalVertices, metalIndices, textures_loaded);
+        std::vector<Texture> railTextures;
+        Texture railTex;
+        railTex.id = railTexID;
+        railTex.type = "uDiffMap";
+        railTex.path = "";
+        railTextures.push_back(railTex);
+        Mesh metalMesh(metalVertices, metalIndices, railTextures);
         meshes.push_back(metalMesh);
     }
 
@@ -245,7 +245,13 @@ void RollerCoaster::generateRails() {
             }
         }
 
-        Mesh woodMesh(woodVertices, woodIndices, textures_loaded);
+        std::vector<Texture> woodTextures;
+        Texture woodTex;
+        woodTex.id = woodTexID;
+        woodTex.type = "uDiffMap";
+        woodTex.path = "";
+        woodTextures.push_back(woodTex);
+        Mesh woodMesh(woodVertices, woodIndices, woodTextures);
         meshes.push_back(woodMesh);
     }
 }
