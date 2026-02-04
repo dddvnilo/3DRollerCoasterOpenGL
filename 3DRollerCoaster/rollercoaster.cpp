@@ -148,8 +148,7 @@ void RollerCoaster::generateRails() {
         glm::vec3 prevPoint = getPoint(0.0f);
 
         float plankThickness = 0.08f; // debljina daske (vertikalno gore-dole)
-        float plankHeight = 0.05f;    // visina daske (od nivoa šine)
-        float halfWidth = trackWidth * 0.5f; // širina daske = razmak između šina
+        float halfWidth = trackWidth * 0.7f; // širina daske
         float plankLength = 0.2f;
 
         for (int i = 1; i <= samples; i++) {
@@ -165,44 +164,78 @@ void RollerCoaster::generateRails() {
                 glm::vec3 frontCenter = p;
                 glm::vec3 backCenter = p - T * plankLength;
 
-                // 8 vertexa kvadra (daske)
-                glm::vec3 a = frontCenter + N * halfWidth; // left-top-front
-                glm::vec3 b = frontCenter - N * halfWidth; // right-top-front
-                glm::vec3 c = frontCenter - N * halfWidth + B * plankThickness;                     // right-bottom-front
-                glm::vec3 d = frontCenter + N * halfWidth + B * plankThickness;                     // left-bottom-front
+                // 8 vertikala kvadra (top i bottom dodaju B, bottom na nivou)
+                glm::vec3 topLeftFront = frontCenter + N * halfWidth + B * plankThickness;
+                glm::vec3 topRightFront = frontCenter - N * halfWidth + B * plankThickness;
+                glm::vec3 bottomLeftFront = frontCenter + N * halfWidth;
+                glm::vec3 bottomRightFront = frontCenter - N * halfWidth;
 
-                glm::vec3 e = backCenter + N * halfWidth ; // left-top-back
-                glm::vec3 f = backCenter - N * halfWidth ; // right-top-back
-                glm::vec3 g = backCenter - N * halfWidth + B * plankThickness;                      // right-bottom-back
-                glm::vec3 h = backCenter + N * halfWidth + B * plankThickness;                      // left-bottom-back
+                glm::vec3 topLeftBack = backCenter + N * halfWidth + B * plankThickness;
+                glm::vec3 topRightBack = backCenter - N * halfWidth + B * plankThickness;
+                glm::vec3 bottomLeftBack = backCenter + N * halfWidth;
+                glm::vec3 bottomRightBack = backCenter - N * halfWidth;
 
                 unsigned int base = woodVertices.size();
-                woodVertices.push_back({ a, glm::normalize(a - frontCenter), glm::vec2(0,1) });
-                woodVertices.push_back({ b, glm::normalize(b - frontCenter), glm::vec2(1,1) });
-                woodVertices.push_back({ c, glm::normalize(c - frontCenter), glm::vec2(1,0) });
-                woodVertices.push_back({ d, glm::normalize(d - frontCenter), glm::vec2(0,0) });
-                woodVertices.push_back({ e, glm::normalize(e - backCenter),  glm::vec2(0,1) });
-                woodVertices.push_back({ f, glm::normalize(f - backCenter),  glm::vec2(1,1) });
-                woodVertices.push_back({ g, glm::normalize(g - backCenter),  glm::vec2(1,0) });
-                woodVertices.push_back({ h, glm::normalize(h - backCenter),  glm::vec2(0,0) });
 
-                // Indeksi za 12 trouglova (6 strana kvadra)
-                unsigned int inds[] = {
-                    // Top
-                    base, base + 1, base + 5, base, base + 5, base + 4,
-                    // Bottom
-                    base + 3, base + 7, base + 6, base + 3, base + 6, base + 2,
-                    // Front
-                    base, base + 4, base + 7, base, base + 7, base + 3,
-                    // Back
-                    base + 1, base + 2, base + 6, base + 1, base + 6, base + 5,
-                    // Left
-                    base, base + 3, base + 2, base, base + 2, base + 1,
-                    // Right
-                    base + 4, base + 5, base + 6, base + 4, base + 6, base + 7
-                };
+                // ==================== VERTEXI ====================
+                woodVertices.push_back({ topLeftFront, glm::vec3(0,1,0), glm::vec2(0,1) });   // 0 top
+                woodVertices.push_back({ topRightFront, glm::vec3(0,1,0), glm::vec2(1,1) });  // 1
+                woodVertices.push_back({ topRightBack, glm::vec3(0,1,0), glm::vec2(1,0) });   // 2
+                woodVertices.push_back({ topLeftBack, glm::vec3(0,1,0), glm::vec2(0,0) });    // 3
 
-                woodIndices.insert(woodIndices.end(), inds, inds + 36);
+                woodVertices.push_back({ bottomLeftFront, glm::vec3(0,-1,0), glm::vec2(0,1) }); // 4 bottom
+                woodVertices.push_back({ bottomRightFront, glm::vec3(0,-1,0), glm::vec2(1,1) }); // 5
+                woodVertices.push_back({ bottomRightBack, glm::vec3(0,-1,0), glm::vec2(1,0) }); // 6
+                woodVertices.push_back({ bottomLeftBack, glm::vec3(0,-1,0), glm::vec2(0,0) });  // 7
+
+                // ==================== INDEKSI SA CCW ====================
+               // Top - standard CCW
+                woodIndices.insert(woodIndices.end(), {
+                    base + 0, base + 1, base + 2,
+                    base + 0, base + 2, base + 3
+                    });
+
+                // Top - backface duplikat
+                woodIndices.insert(woodIndices.end(), {
+                    base + 0, base + 2, base + 1,
+                    base + 0, base + 3, base + 2
+                    });
+
+                // Bottom - standard CCW
+                woodIndices.insert(woodIndices.end(), {
+                    base + 4, base + 6, base + 5,
+                    base + 4, base + 7, base + 6
+                    });
+
+                // Bottom - backface duplikat
+                woodIndices.insert(woodIndices.end(), {
+                    base + 4, base + 5, base + 6,
+                    base + 4, base + 6, base + 7
+                    });
+
+                // Front
+                woodIndices.insert(woodIndices.end(), {
+                    base + 4, base + 0, base + 1,
+                    base + 4, base + 1, base + 5
+                    });
+
+                // Back
+                woodIndices.insert(woodIndices.end(), {
+                    base + 3, base + 7, base + 6,
+                    base + 3, base + 6, base + 2
+                    });
+
+                // Left
+                woodIndices.insert(woodIndices.end(), {
+                    base + 0, base + 4, base + 7,
+                    base + 0, base + 7, base + 3
+                    });
+
+                // Right
+                woodIndices.insert(woodIndices.end(), {
+                    base + 1, base + 2, base + 6,
+                    base + 1, base + 6, base + 5
+                    });
 
                 accumulatedDistance = 0.0f;
                 prevPoint = p;

@@ -156,7 +156,7 @@ int main(void)
     glCullFace(GL_BACK);// biranje lica koje ce se eliminisati (tek nakon sto ukljucimo Face Culling)
 
     basicShader.use();
-    basicShader.setVec3("uLightPos", 0, 10, 3);
+    basicShader.setVec3("uLightPos", 0, 7, 3);
     basicShader.setVec3("uViewPos", 0, 0, 5);
     basicShader.setVec3("uLightColor", 1, 1, 1);
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);

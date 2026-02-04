@@ -14,7 +14,7 @@ uniform sampler2D uDiffMap1;
 void main()
 {    
 
-    float ambientStrength = 0.1;
+    float ambientStrength = 0.2;
     vec3 ambient = ambientStrength * uLightColor;
   	
     // diffuse 
