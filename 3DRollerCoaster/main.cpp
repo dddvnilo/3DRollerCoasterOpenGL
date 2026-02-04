@@ -36,6 +36,7 @@ bool firstMouse = true;
 float lastX, lastY = 500.0f; // Ekran nam je 1000 x 1000 piksela, kursor je inicijalno na sredini
 float yaw = -90.0f, pitch = 0.0f; // yaw -90: kamera gleda u pravcu z ose; pitch = 0: kamera gleda vodoravno
 glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0); // at-vektor je inicijalno u pravcu z ose
+float movementSpeedMult = 0.04f;
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_G && action == GLFW_PRESS) {
@@ -152,7 +153,7 @@ int main(void)
     glCullFace(GL_BACK);// biranje lica koje ce se eliminisati (tek nakon sto ukljucimo Face Culling)
 
     basicShader.use();
-    basicShader.setVec3("uLightPos", 0, 5, 3);
+    basicShader.setVec3("uLightPos", 0, 10, 3);
     basicShader.setVec3("uViewPos", 0, 0, 5);
     basicShader.setVec3("uLightColor", 1, 1, 1);
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
@@ -167,7 +168,7 @@ int main(void)
     basicShader.setMat4("uP", projectionP);
 
     // kreiranje ground-a: sirina=50, duzina=50, subdivisions=50, tekstura
-    Ground ground(50.0f, 50.0f, 50, groundTexture);
+    Ground ground(50.0f, 50.0f, 30, groundTexture);
 
     glEnable(GL_DEPTH_TEST); // inicijalno ukljucivanje Z bafera (kasnije mozemo da iskljucujemo i opet ukljucujemo)
 
@@ -206,19 +207,19 @@ int main(void)
         // walk around camera
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
         {   
-            cameraPos += 0.01f * glm::normalize(glm::vec3(cameraFront.z, 0, -cameraFront.x));
+            cameraPos += movementSpeedMult * glm::normalize(glm::vec3(cameraFront.z, 0, -cameraFront.x));
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
         {
-            cameraPos -= 0.01f * glm::normalize(glm::vec3(cameraFront.z, 0, -cameraFront.x));
+            cameraPos -= movementSpeedMult * glm::normalize(glm::vec3(cameraFront.z, 0, -cameraFront.x));
         }
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
         {
-            cameraPos += 0.01f * glm::normalize(glm::vec3(cameraFront.x, 0, cameraFront.z));
+            cameraPos += movementSpeedMult * glm::normalize(glm::vec3(cameraFront.x, 0, cameraFront.z));
         }
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
         {
-            cameraPos -= 0.01f * glm::normalize(glm::vec3(cameraFront.x, 0, cameraFront.z));
+            cameraPos -= movementSpeedMult * glm::normalize(glm::vec3(cameraFront.x, 0, cameraFront.z));
         }
 
         // CRTANJE GROUND-A
