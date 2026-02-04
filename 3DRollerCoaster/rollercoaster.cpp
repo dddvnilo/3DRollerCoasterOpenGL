@@ -74,61 +74,63 @@ void RollerCoaster::generateRails() {
         std::vector<Vertex> metalVertices;
         std::vector<unsigned int> metalIndices;
 
-        int cylinderSegments = 30; // više segmenata = glatkiji cilindar
+        float halfRailW = 0.05f;  // polovina širine šine
+        float halfRailH = railThickness * 0.5f;
+        float halfRailD = 0.0f;  // polovina dubine kvadra
 
-        for (int i = 0; i <= samples; i++) {
-            float t = float(i) / float(samples);
-            glm::vec3 p = getPoint(t);
-            glm::vec3 T = getTangent(t);
-            glm::vec3 N = glm::normalize(glm::cross(worldUp, T));
+        for (int i = 0; i < samples; i++) {
+            float t0 = float(i) / samples;
+            float t1 = float(i + 1) / samples;
+
+            glm::vec3 p0 = getPoint(t0);
+            glm::vec3 p1 = getPoint(t1);
+
+            glm::vec3 T = glm::normalize(p1 - p0);
+            glm::vec3 N = glm::normalize(glm::cross(glm::vec3(0, 1, 0), T));
             glm::vec3 B = glm::normalize(glm::cross(T, N));
 
-            // Levi i desni rail kao cilindri (aproksimirano kvadratima)
             for (int side = -1; side <= 1; side += 2) {
-                glm::vec3 railCenter = p + (float)side * N * halfRailW;
+                glm::vec3 center0 = p0 + (float)side * N * (trackWidth * 0.5f);
+                glm::vec3 center1 = p1 + (float)side * N * (trackWidth * 0.5f);
 
-                for (int j = 0; j < cylinderSegments; j++) {
-                    float angle = 2.0f * glm::pi<float>() * j / cylinderSegments;
-                    glm::vec3 offset = B * cos(angle) * halfRailH + N * 0.05f * sin(angle);
-                    glm::vec3 vertexPos = railCenter + offset;
+                // Širina se sada dodaje: ±halfRailW po N
+                glm::vec3 offsetN0 = N * halfRailW;
+                glm::vec3 offsetN1 = N * halfRailW;
 
-                    metalVertices.push_back({ vertexPos, glm::normalize(offset), glm::vec2(j / (float)cylinderSegments, t) });
-                }
-            }
-        }
+                // 8 verteksa segmenta kvadra
+                glm::vec3 a = center0 + offsetN0 + B * halfRailH + T * halfRailD; // top-front-left
+                glm::vec3 b = center0 - offsetN0 + B * halfRailH + T * halfRailD; // top-front-right
+                glm::vec3 c = center0 - offsetN0 - B * halfRailH + T * halfRailD; // bottom-front-right
+                glm::vec3 d = center0 + offsetN0 - B * halfRailH + T * halfRailD; // bottom-front-left
 
-        // Indeksi
-        int vertsPerSlice = cylinderSegments * 2;
-        for (int i = 0; i < samples; i++) {
-            int base = i * vertsPerSlice;
-            int next = base + vertsPerSlice;
+                glm::vec3 e = center1 + offsetN1 + B * halfRailH - T * halfRailD; // top-back-left
+                glm::vec3 f = center1 - offsetN1 + B * halfRailH - T * halfRailD; // top-back-right
+                glm::vec3 g = center1 - offsetN1 - B * halfRailH - T * halfRailD; // bottom-back-right
+                glm::vec3 h = center1 + offsetN1 - B * halfRailH - T * halfRailD; // bottom-back-left
 
-            for (int j = 0; j < cylinderSegments; j++) {
-                int current = base + j;
-                int nextJ = base + (j + 1) % cylinderSegments;
-                int currentNext = next + j;
-                int nextNext = next + (j + 1) % cylinderSegments;
+                unsigned int base = metalVertices.size();
 
-                // Levi
-                metalIndices.insert(metalIndices.end(), {
-                    static_cast<unsigned int>(current),
-                    static_cast<unsigned int>(nextJ),
-                    static_cast<unsigned int>(nextNext),
-                    static_cast<unsigned int>(current),
-                    static_cast<unsigned int>(nextNext),
-                    static_cast<unsigned int>(currentNext)
-                    });
+                // verteksi i normale
+                metalVertices.push_back({ a, B, glm::vec2(0.0f, 1.0f) }); // top-front-left
+                metalVertices.push_back({ b, B, glm::vec2(1.0f, 1.0f) }); // top-front-right
+                metalVertices.push_back({ c, -B, glm::vec2(1.0f, 0.0f) }); // bottom-front-right
+                metalVertices.push_back({ d, -B, glm::vec2(0.0f, 0.0f) }); // bottom-front-left
+                metalVertices.push_back({ e, B, glm::vec2(0.0f, 1.0f) }); // top-back-left
+                metalVertices.push_back({ f, B, glm::vec2(1.0f, 1.0f) }); // top-back-right
+                metalVertices.push_back({ g, -B, glm::vec2(1.0f, 0.0f) }); // bottom-back-right
+                metalVertices.push_back({ h, -B, glm::vec2(0.0f, 0.0f) }); // bottom-back-left
 
-                // Desni (offset za desni rail)
-                int offset = cylinderSegments;
-                metalIndices.insert(metalIndices.end(), {
-                    static_cast<unsigned int>(current + offset),
-                    static_cast<unsigned int>(nextJ + offset),
-                    static_cast<unsigned int>(nextNext + offset),
-                    static_cast<unsigned int>(current + offset),
-                    static_cast<unsigned int>(nextNext + offset),
-                    static_cast<unsigned int>(currentNext + offset)
-                    });
+                unsigned int inds[] = {
+                    0,1,5, 0,5,4,      // top
+                    3,7,6, 3,6,2,      // bottom
+                    0,4,7, 0,7,3,      // left
+                    1,2,6, 1,6,5,      // right
+                    0,3,2, 0,2,1,      // front
+                    4,5,6, 4,6,7       // back
+                };
+
+                for (int k = 0; k < 36; k++)
+                    metalIndices.push_back(base + inds[k]);
             }
         }
 
@@ -136,14 +138,19 @@ void RollerCoaster::generateRails() {
         meshes.push_back(metalMesh);
     }
 
-    // ==================== DRVENA POPUNA ====================
+    // ==================== DRVENA POPUNA - DASKE ====================
     {
         std::vector<Vertex> woodVertices;
         std::vector<unsigned int> woodIndices;
 
-        float desiredStep = 0.8f; // željeni razmak između stubova u prostoru
+        float desiredStep = 0.8f; // razmak između daski
         float accumulatedDistance = 0.0f;
         glm::vec3 prevPoint = getPoint(0.0f);
+
+        float plankThickness = 0.08f; // debljina daske (vertikalno gore-dole)
+        float plankHeight = 0.05f;    // visina daske (od nivoa šine)
+        float halfWidth = trackWidth * 0.5f; // širina daske = razmak između šina
+        float plankLength = 0.2f;
 
         for (int i = 1; i <= samples; i++) {
             float t = float(i) / samples;
@@ -152,25 +159,50 @@ void RollerCoaster::generateRails() {
 
             if (accumulatedDistance >= desiredStep) {
                 glm::vec3 T = getTangent(t);
-                glm::vec3 N = glm::normalize(glm::cross(worldUp, T));
+                glm::vec3 N = glm::normalize(glm::cross(glm::vec3(0, 1, 0), T));
                 glm::vec3 B = glm::normalize(glm::cross(T, N));
 
-                glm::vec3 a = p - N * halfRailW - B * halfRailH;
-                glm::vec3 b = p + N * halfRailW - B * halfRailH;
-                glm::vec3 c = p + N * halfRailW + B * halfRailH;
-                glm::vec3 d = p - N * halfRailW + B * halfRailH;
+                glm::vec3 frontCenter = p;
+                glm::vec3 backCenter = p - T * plankLength;
 
-                unsigned int base = static_cast<unsigned int>(woodVertices.size());
-                woodVertices.push_back({ a, glm::normalize(a - p), glm::vec2(0,0) });
-                woodVertices.push_back({ b, glm::normalize(b - p), glm::vec2(1,0) });
-                woodVertices.push_back({ c, glm::normalize(c - p), glm::vec2(1,1) });
-                woodVertices.push_back({ d, glm::normalize(d - p), glm::vec2(0,1) });
+                // 8 vertexa kvadra (daske)
+                glm::vec3 a = frontCenter + N * halfWidth; // left-top-front
+                glm::vec3 b = frontCenter - N * halfWidth; // right-top-front
+                glm::vec3 c = frontCenter - N * halfWidth + B * plankThickness;                     // right-bottom-front
+                glm::vec3 d = frontCenter + N * halfWidth + B * plankThickness;                     // left-bottom-front
 
-                woodIndices.insert(woodIndices.end(), {
-                base, base + 3, base + 2,
-                base, base + 2, base + 1 
-                    });
+                glm::vec3 e = backCenter + N * halfWidth ; // left-top-back
+                glm::vec3 f = backCenter - N * halfWidth ; // right-top-back
+                glm::vec3 g = backCenter - N * halfWidth + B * plankThickness;                      // right-bottom-back
+                glm::vec3 h = backCenter + N * halfWidth + B * plankThickness;                      // left-bottom-back
 
+                unsigned int base = woodVertices.size();
+                woodVertices.push_back({ a, glm::normalize(a - frontCenter), glm::vec2(0,1) });
+                woodVertices.push_back({ b, glm::normalize(b - frontCenter), glm::vec2(1,1) });
+                woodVertices.push_back({ c, glm::normalize(c - frontCenter), glm::vec2(1,0) });
+                woodVertices.push_back({ d, glm::normalize(d - frontCenter), glm::vec2(0,0) });
+                woodVertices.push_back({ e, glm::normalize(e - backCenter),  glm::vec2(0,1) });
+                woodVertices.push_back({ f, glm::normalize(f - backCenter),  glm::vec2(1,1) });
+                woodVertices.push_back({ g, glm::normalize(g - backCenter),  glm::vec2(1,0) });
+                woodVertices.push_back({ h, glm::normalize(h - backCenter),  glm::vec2(0,0) });
+
+                // Indeksi za 12 trouglova (6 strana kvadra)
+                unsigned int inds[] = {
+                    // Top
+                    base, base + 1, base + 5, base, base + 5, base + 4,
+                    // Bottom
+                    base + 3, base + 7, base + 6, base + 3, base + 6, base + 2,
+                    // Front
+                    base, base + 4, base + 7, base, base + 7, base + 3,
+                    // Back
+                    base + 1, base + 2, base + 6, base + 1, base + 6, base + 5,
+                    // Left
+                    base, base + 3, base + 2, base, base + 2, base + 1,
+                    // Right
+                    base + 4, base + 5, base + 6, base + 4, base + 6, base + 7
+                };
+
+                woodIndices.insert(woodIndices.end(), inds, inds + 36);
 
                 accumulatedDistance = 0.0f;
                 prevPoint = p;
