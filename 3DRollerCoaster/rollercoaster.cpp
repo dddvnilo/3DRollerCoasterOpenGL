@@ -31,20 +31,31 @@ samples(samples)
 // ================= PATH =================
 glm::vec3 RollerCoaster::getPoint(float t)
 {
-    float x = t * length;
-    float y;
+    if (t < 0.5f) {
+        // ===== NAPRED =====
+        float tt = t / 0.5f;   // 0..1
+        float x = tt * length;
+        float y;
 
-    if (t < 0.2f) {
-        y = baseHeight;
+        if (tt < 0.2f)
+            y = baseHeight;
+        else {
+            float t2 = (tt - 0.2f) / 0.8f;
+            y = baseHeight +
+                amplitude * (1.0f +
+                    sin(2.0f * hills * glm::pi<float>() * t2 - glm::half_pi<float>()));
+        }
+
+        return glm::vec3(x, y, 0.0f);
     }
     else {
-        float tt = (t - 0.2f) / 0.8f;
-        y = baseHeight +
-            amplitude * (1.0f +
-                sin(2.0f * hills * glm::pi<float>() * tt - glm::half_pi<float>()));
-    }
+        // ===== NAZAD (ravno) =====
+        float tt = (t - 0.5f) / 0.5f; // 0..1
+        float x = length * (1.0f - tt);
+        float y = baseHeight;
 
-    return glm::vec3(x, y, 0.0f);
+        return glm::vec3(x, y, 0.0f);
+    }
 }
 
 glm::vec3 RollerCoaster::getTangent(float t)
@@ -147,9 +158,9 @@ void RollerCoaster::generateRails() {
         float accumulatedDistance = 0.0f;
         glm::vec3 prevPoint = getPoint(0.0f);
 
-        float plankThickness = 0.08f; // debljina daske (vertikalno gore-dole)
+        float plankThickness = railThickness * 0.5; // debljina daske (vertikalno gore-dole)
         float halfWidth = trackWidth * 0.7f; // širina daske
-        float plankLength = 0.2f;
+        float plankLength = 0.25f;
 
         for (int i = 1; i <= samples; i++) {
             float t = float(i) / samples;
