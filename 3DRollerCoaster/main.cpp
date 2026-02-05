@@ -174,14 +174,16 @@ int main(void)
 
     // kreiranje ground-a: sirina=50, duzina=50, subdivisions=50, tekstura
     Ground ground(50.0f, 50.0f, 30, groundTexture);
+    // kreiranje rolerkostera
     RollerCoaster rollercoaster(
-        40.0f,  // dužina
-        2.0f,   // početna visina
+        40.0f,  // duzina
+        3.0f,   // offset za povratak unazad
+        2.0f,   // pocetna visina
         4.0f,   // amplitude
         3,      // brda
-        1.2f,   // širina šina
+        1.2f,   // sirina sina
         0.15f,  // debljina samog rail-a
-        200,     // rezolucija,
+        3000,    // rezolucija
         metalTexture,
         woodTexture
     );
