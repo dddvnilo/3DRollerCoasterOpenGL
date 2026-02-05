@@ -121,14 +121,28 @@ void RollerCoaster::generateRails() {
     float halfRailW = trackWidth * 0.5f;
     float halfRailH = railThickness * 0.5f;
 
-    // ==================== METALNE ŠINE ====================
+    // ==================== METALNE SINE ====================
     {
         std::vector<Vertex> metalVertices;
         std::vector<unsigned int> metalIndices;
 
-        float halfRailW = 0.05f;  // polovina širine šine
+        float halfRailW = 0.05f;
         float halfRailH = railThickness * 0.5f;
-        float halfRailD = 0.0f;  // polovina dubine kvadra
+        float halfRailD = 0.0f;
+
+        auto addQuad = [&](const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3,
+            const glm::vec2& uv0, const glm::vec2& uv1, const glm::vec2& uv2, const glm::vec2& uv3)
+            {
+                glm::vec3 normal = glm::normalize(glm::cross(v2 - v0, v1 - v0));
+                unsigned int base = metalVertices.size();
+                metalVertices.push_back({ v0, normal, uv0 });
+                metalVertices.push_back({ v1, normal, uv1 });
+                metalVertices.push_back({ v2, normal, uv2 });
+                metalVertices.push_back({ v3, normal, uv3 });
+
+                metalIndices.insert(metalIndices.end(),
+                    { base, base + 3, base + 2, base, base + 2, base + 1});
+            };
 
         for (int i = 0; i < samples; i++) {
             float t0 = float(i) / samples;
@@ -145,44 +159,27 @@ void RollerCoaster::generateRails() {
                 glm::vec3 center0 = p0 + (float)side * N * (trackWidth * 0.5f);
                 glm::vec3 center1 = p1 + (float)side * N * (trackWidth * 0.5f);
 
-                // Širina se sada dodaje: ±halfRailW po N
-                glm::vec3 offsetN0 = N * halfRailW;
-                glm::vec3 offsetN1 = N * halfRailW;
+                float halfRailW = 0.05f;                    // sirina sine
+                float halfRailH = railThickness * 0.5f;     // visina
 
-                // 8 verteksa segmenta kvadra
-                glm::vec3 a = center0 + offsetN0 + B * halfRailH + T * halfRailD; // top-front-left
-                glm::vec3 b = center0 - offsetN0 + B * halfRailH + T * halfRailD; // top-front-right
-                glm::vec3 c = center0 - offsetN0 - B * halfRailH + T * halfRailD; // bottom-front-right
-                glm::vec3 d = center0 + offsetN0 - B * halfRailH + T * halfRailD; // bottom-front-left
+                // 8 verteksa kvadra segmenta (nisam znao kako da izvlacim kvadar po putanji pa je sastavljen iz vise segmenata - vise kvadara) sine
+                glm::vec3 bl = center0 - N * halfRailW - B * halfRailH; // back-bottom-left
+                glm::vec3 br = center0 + N * halfRailW - B * halfRailH; // back-bottom-right
+                glm::vec3 tl = center0 - N * halfRailW + B * halfRailH; // back-top-left
+                glm::vec3 tr = center0 + N * halfRailW + B * halfRailH; // back-top-right
 
-                glm::vec3 e = center1 + offsetN1 + B * halfRailH - T * halfRailD; // top-back-left
-                glm::vec3 f = center1 - offsetN1 + B * halfRailH - T * halfRailD; // top-back-right
-                glm::vec3 g = center1 - offsetN1 - B * halfRailH - T * halfRailD; // bottom-back-right
-                glm::vec3 h = center1 + offsetN1 - B * halfRailH - T * halfRailD; // bottom-back-left
+                glm::vec3 fbl = center1 - N * halfRailW - B * halfRailH; // front-bottom-left
+                glm::vec3 fbr = center1 + N * halfRailW - B * halfRailH; // front-bottom-right
+                glm::vec3 ftl = center1 - N * halfRailW + B * halfRailH; // front-top-left
+                glm::vec3 ftr = center1 + N * halfRailW + B * halfRailH; // front-top-right
 
-                unsigned int base = metalVertices.size();
-
-                // verteksi i normale
-                metalVertices.push_back({ a, B, glm::vec2(0.0f, 1.0f) }); // top-front-left
-                metalVertices.push_back({ b, B, glm::vec2(1.0f, 1.0f) }); // top-front-right
-                metalVertices.push_back({ c, -B, glm::vec2(1.0f, 0.0f) }); // bottom-front-right
-                metalVertices.push_back({ d, -B, glm::vec2(0.0f, 0.0f) }); // bottom-front-left
-                metalVertices.push_back({ e, B, glm::vec2(0.0f, 1.0f) }); // top-back-left
-                metalVertices.push_back({ f, B, glm::vec2(1.0f, 1.0f) }); // top-back-right
-                metalVertices.push_back({ g, -B, glm::vec2(1.0f, 0.0f) }); // bottom-back-right
-                metalVertices.push_back({ h, -B, glm::vec2(0.0f, 0.0f) }); // bottom-back-left
-
-                unsigned int inds[] = {
-                    0,1,5, 0,5,4,      // top
-                    3,7,6, 3,6,2,      // bottom
-                    0,4,7, 0,7,3,      // left
-                    1,2,6, 1,6,5,      // right
-                    0,3,2, 0,2,1,      // front
-                    4,5,6, 4,6,7       // back
-                };
-
-                for (int k = 0; k < 36; k++)
-                    metalIndices.push_back(base + inds[k]);
+                // dodavanje svih 6 strana kvadra sine
+                addQuad(ftl, ftr, fbr, fbl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));   // front
+                addQuad(bl, br, tr, tl, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));       // back
+                addQuad(bl, tl, ftl, fbl, glm::vec2(0, 0), glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0));     // left
+                addQuad(br, fbr, ftr, tr, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));     // right
+                addQuad(fbl, fbr, br, bl, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));     // bottom
+                addQuad(tl, tr, ftr, ftl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));     // top
             }
         }
 
@@ -201,13 +198,27 @@ void RollerCoaster::generateRails() {
         std::vector<Vertex> woodVertices;
         std::vector<unsigned int> woodIndices;
 
-        float desiredStep = 0.8f; // razmak između daski
+        float desiredStep = 0.8f; // razmak izmedju daski
         float accumulatedDistance = 0.0f;
         glm::vec3 prevPoint = getPoint(0.0f);
 
-        float plankThickness = railThickness * 0.5; // debljina daske (vertikalno gore-dole)
-        float halfWidth = trackWidth * 0.7f; // širina daske
+        float plankThickness = railThickness * 0.7; // debljina daske (vertikalno gore-dole)
+        float halfWidth = trackWidth * 0.7f; // sirina daske
         float plankLength = 0.25f;
+
+        // lambda funkcija koja dodaje stranicu kvadra i automatski racuna normalu svake stranice
+        auto addQuad = [&](const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3,
+            const glm::vec2& uv0, const glm::vec2& uv1, const glm::vec2& uv2, const glm::vec2& uv3)
+            {
+                glm::vec3 normal = glm::normalize(glm::cross(v2 - v0, v1 - v0));
+                unsigned int base = woodVertices.size();
+                woodVertices.push_back({ v0, normal, uv0 });
+                woodVertices.push_back({ v1, normal, uv1 });
+                woodVertices.push_back({ v2, normal, uv2 });
+                woodVertices.push_back({ v3, normal, uv3 });
+
+                woodIndices.insert(woodIndices.end(), { base, base + 3, base + 2, base, base + 2, base + 1 });
+            };
 
         for (int i = 1; i <= samples; i++) {
             float t = float(i) / samples;
@@ -222,78 +233,35 @@ void RollerCoaster::generateRails() {
                 glm::vec3 frontCenter = p;
                 glm::vec3 backCenter = p - T * plankLength;
 
-                // 8 vertikala kvadra (top i bottom dodaju B, bottom na nivou)
-                glm::vec3 topLeftFront = frontCenter + N * halfWidth + B * plankThickness;
-                glm::vec3 topRightFront = frontCenter - N * halfWidth + B * plankThickness;
-                glm::vec3 bottomLeftFront = frontCenter + N * halfWidth;
-                glm::vec3 bottomRightFront = frontCenter - N * halfWidth;
+                // 8 verteksa celog kvadra
+                glm::vec3 bl = backCenter - N * halfWidth;                        // back-left-bottom
+                glm::vec3 br = backCenter + N * halfWidth;                        // back-right-bottom
+                glm::vec3 tl = backCenter - N * halfWidth + B * plankThickness;   // back-left-top
+                glm::vec3 tr = backCenter + N * halfWidth + B * plankThickness;   // back-right-top
 
-                glm::vec3 topLeftBack = backCenter + N * halfWidth + B * plankThickness;
-                glm::vec3 topRightBack = backCenter - N * halfWidth + B * plankThickness;
-                glm::vec3 bottomLeftBack = backCenter + N * halfWidth;
-                glm::vec3 bottomRightBack = backCenter - N * halfWidth;
+                glm::vec3 fbl = frontCenter - N * halfWidth;                      // front-left-bottom
+                glm::vec3 fbr = frontCenter + N * halfWidth;                      // front-right-bottom
+                glm::vec3 ftl = frontCenter - N * halfWidth + B * plankThickness; // front-left-top
+                glm::vec3 ftr = frontCenter + N * halfWidth + B * plankThickness; // front-right-top
 
-                unsigned int base = woodVertices.size();
+                // stelovanje da plank bude negde po sredini kroz sine
+                float yPlankOffset = 0.05f;
+                tl.y -= yPlankOffset;
+                tr.y -= yPlankOffset;
+                ftl.y -= yPlankOffset;
+                ftr.y -= yPlankOffset;
+                bl.y -= yPlankOffset;
+                br.y -= yPlankOffset;
+                fbl.y -= yPlankOffset;
+                fbr.y -= yPlankOffset;
 
-                // ==================== VERTEXI ====================
-                woodVertices.push_back({ topLeftFront, glm::vec3(0,1,0), glm::vec2(0,1) });   // 0 top
-                woodVertices.push_back({ topRightFront, glm::vec3(0,1,0), glm::vec2(1,1) });  // 1
-                woodVertices.push_back({ topRightBack, glm::vec3(0,1,0), glm::vec2(1,0) });   // 2
-                woodVertices.push_back({ topLeftBack, glm::vec3(0,1,0), glm::vec2(0,0) });    // 3
-
-                woodVertices.push_back({ bottomLeftFront, glm::vec3(0,-1,0), glm::vec2(0,1) }); // 4 bottom
-                woodVertices.push_back({ bottomRightFront, glm::vec3(0,-1,0), glm::vec2(1,1) }); // 5
-                woodVertices.push_back({ bottomRightBack, glm::vec3(0,-1,0), glm::vec2(1,0) }); // 6
-                woodVertices.push_back({ bottomLeftBack, glm::vec3(0,-1,0), glm::vec2(0,0) });  // 7
-
-                // ==================== INDEKSI SA CCW ====================
-               // Top - standard CCW
-                woodIndices.insert(woodIndices.end(), {
-                    base + 0, base + 1, base + 2,
-                    base + 0, base + 2, base + 3
-                    });
-
-                // Top - backface duplikat
-                woodIndices.insert(woodIndices.end(), {
-                    base + 0, base + 2, base + 1,
-                    base + 0, base + 3, base + 2
-                    });
-
-                // Bottom - standard CCW
-                woodIndices.insert(woodIndices.end(), {
-                    base + 4, base + 6, base + 5,
-                    base + 4, base + 7, base + 6
-                    });
-
-                // Bottom - backface duplikat
-                woodIndices.insert(woodIndices.end(), {
-                    base + 4, base + 5, base + 6,
-                    base + 4, base + 6, base + 7
-                    });
-
-                // Front
-                woodIndices.insert(woodIndices.end(), {
-                    base + 4, base + 0, base + 1,
-                    base + 4, base + 1, base + 5
-                    });
-
-                // Back
-                woodIndices.insert(woodIndices.end(), {
-                    base + 3, base + 7, base + 6,
-                    base + 3, base + 6, base + 2
-                    });
-
-                // Left
-                woodIndices.insert(woodIndices.end(), {
-                    base + 0, base + 4, base + 7,
-                    base + 0, base + 7, base + 3
-                    });
-
-                // Right
-                woodIndices.insert(woodIndices.end(), {
-                    base + 1, base + 2, base + 6,
-                    base + 1, base + 6, base + 5
-                    });
+                // dodavanje svih 6 strana kvadra
+                addQuad(ftl, ftr, fbr, fbl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));   // front
+                addQuad(bl, br, tr, tl, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));       // back
+                addQuad(bl, tl, ftl, fbl, glm::vec2(0, 0), glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0));     // left
+                addQuad(br, fbr, ftr, tr, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));     // right
+                addQuad(fbl, fbr, br, bl, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));     // bottom
+                addQuad(tl, tr, ftr, ftl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));     // top
 
                 accumulatedDistance = 0.0f;
                 prevPoint = p;
@@ -322,38 +290,87 @@ void RollerCoaster::generateSleepers()
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
-    int step = 10;
-    float halfWidth = trackWidth * 0.6f;
+    int step = 50;          // razmak između stubova
+    float hw = 0.07f;       // half width (X)
+    float hd = 0.07f;       // half depth (Z)
 
-    for (int i = 0; i <= samples; i += step) {
-        float t = (float)i / samples;
+    glm::vec3 worldUp(0, 1, 0);
+
+    // lambda funkcija koja dodaje stranicu kvadra i automatski racuna normalu svake stranice
+    auto addQuad = [&](const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3,
+        const glm::vec2& uv0, const glm::vec2& uv1, const glm::vec2& uv2, const glm::vec2& uv3)
+        {
+            glm::vec3 normal = glm::normalize(glm::cross(v2 - v0, v1 - v0));
+            unsigned int base = vertices.size();
+            vertices.push_back({ v0, normal, uv0 });
+            vertices.push_back({ v1, normal, uv1 });
+            vertices.push_back({ v2, normal, uv2 });
+            vertices.push_back({ v3, normal, uv3 });
+
+            indices.insert(indices.end(), { base, base + 3, base + 2, base, base + 2, base + 1 });
+        };
+
+
+    for (int s = 0; s <= samples; s += step)
+    {
+        float t = (float)s / samples;
         glm::vec3 p = getPoint(t);
 
-        glm::vec3 a = p + glm::vec3(-halfWidth, -0.1f, 0);
-        glm::vec3 b = p + glm::vec3(halfWidth, -0.1f, 0);
-        glm::vec3 c = p + glm::vec3(halfWidth, -0.2f, 0);
-        glm::vec3 d = p + glm::vec3(-halfWidth, -0.2f, 0);
+        glm::vec3 T = getTangent(t);
+        glm::vec3 N = glm::normalize(glm::cross(worldUp, T));
 
-        unsigned int base = vertices.size();
+        for (int side = -1; side <= 1; side += 2)
+        {
+            glm::vec3 railPos = p + (float)side * N * (trackWidth * 0.5f);
 
-        Vertex va{}, vb{}, vc{}, vd{};
-        va.Position = a;
-        vb.Position = b;
-        vc.Position = c;
-        vd.Position = d;
+            float y0 = 0.0f;
+            float y1 = railPos.y - 0.02f;
 
-        va.Normal = vb.Normal = vc.Normal = vd.Normal = glm::vec3(0, 1, 0);
+            if (y1 <= y0)
+                continue;
 
-        vertices.push_back(va);
-        vertices.push_back(vb);
-        vertices.push_back(vc);
-        vertices.push_back(vd);
+            glm::vec3 p0(railPos.x, y0, railPos.z);
+            glm::vec3 p1(railPos.x, y1, railPos.z);
 
-        indices.insert(indices.end(), {
-            base, base + 1, base + 2,
-            base, base + 2, base + 3
-            });
+            // 8 pozicija verteksa (vertex position)
+            glm::vec3 corners[8] = {
+                p0 + glm::vec3(-hw, 0, -hd), // 0 bottom-left-back
+                p0 + glm::vec3(hw,0,-hd),  // 1 bottom-right-back
+                p0 + glm::vec3(hw, 0, hd),  // 2 bottom-right-front
+                p0 + glm::vec3(-hw,0, hd), // 3 bottom-left-front
+                p1 + glm::vec3(-hw,0,-hd), // 4 top-left-back
+                p1 + glm::vec3(hw,0,-hd),  // 5 top-right-back
+                p1 + glm::vec3(hw,0, hd),  // 6 top-right-front
+                p1 + glm::vec3(-hw,0, hd)  // 7 top-left-front
+            };
+            glm::vec3 bl = p0 + glm::vec3(-hw, 0, -hd);                        // back-left-bottom
+            glm::vec3 br = p0 + glm::vec3(hw, 0, -hd);                        // back-right-bottom
+            glm::vec3 tl = p1 + glm::vec3(-hw, 0, -hd);   // back-left-top
+            glm::vec3 tr = p1 + glm::vec3(hw, 0, -hd);   // back-right-top
+
+            glm::vec3 fbl = p0 + glm::vec3(-hw, 0, hd);                      // front-left-bottom
+            glm::vec3 fbr = p0 + glm::vec3(hw, 0, hd);                      // front-right-bottom
+            glm::vec3 ftl = p1 + glm::vec3(-hw, 0, hd); // front-left-top
+            glm::vec3 ftr = p1 + glm::vec3(hw, 0, hd); // front-right-top
+
+            unsigned int base = vertices.size();
+
+            // dodavanje svih 6 strana kvadra
+            addQuad(ftl, ftr, fbr, fbl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));   // front
+            addQuad(bl, br, tr, tl, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));       // back
+            addQuad(bl, tl, ftl, fbl, glm::vec2(0, 0), glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0));     // left
+            addQuad(br, fbr, ftr, tr, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));     // right
+            addQuad(fbl, fbr, br, bl, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));     // bottom
+            addQuad(tl, tr, ftr, ftl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));     // top
+        }
     }
 
-    meshes.push_back(Mesh(vertices, indices, textures_loaded));
+    std::vector<Texture> woodTextures;
+    Texture woodTex;
+    woodTex.id = woodTexID;
+    woodTex.type = "uDiffMap";
+    woodTex.path = "";
+    woodTextures.push_back(woodTex);
+
+    meshes.push_back(Mesh(vertices, indices, woodTextures));
 }

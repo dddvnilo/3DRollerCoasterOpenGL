@@ -158,14 +158,15 @@ int main(void)
     glCullFace(GL_BACK);// biranje lica koje ce se eliminisati (tek nakon sto ukljucimo Face Culling)
 
     basicShader.use();
-    basicShader.setVec3("uLightPos", 0, 7, 3);
+    basicShader.setVec3("uLightPos", 10, 7, 3);
+    basicShader.setVec3("uLightPos", 0, 1, -20);
     basicShader.setVec3("uViewPos", 0, 0, 5);
     basicShader.setVec3("uLightColor", 1, 1, 1);
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
     basicShader.setMat4("uP", projection);
     glm::vec3 cameraPos = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0);
-    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront,cameraUp);
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront ,cameraUp);
     basicShader.setMat4("uV", view);
     glm::mat4 model = glm::mat4(1.0f);
     basicShader.setMat4("uM", model);
@@ -177,13 +178,13 @@ int main(void)
     // kreiranje rolerkostera
     RollerCoaster rollercoaster(
         40.0f,  // duzina
-        3.0f,   // offset za povratak unazad
-        2.0f,   // pocetna visina
-        4.0f,   // amplitude
-        3,      // brda
+        3.0f,   // offset za povratak unazad (po z osi koliko su delovi puta za napred i nazad udaljeni)
+        1.5f,   // pocetna visina
+        4.0f,   // amplitude (za vrhove i doline)
+        3,      // broj brda
         1.2f,   // sirina sina
         0.15f,  // debljina samog rail-a
-        3000,    // rezolucija
+        5000,   // rezolucija
         metalTexture,
         woodTexture
     );
