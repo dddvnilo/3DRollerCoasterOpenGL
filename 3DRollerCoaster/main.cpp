@@ -180,7 +180,7 @@ int main(void)
     Path path(
         40.0f,  // duzina
         3.0f,   // offset za deo puta za povratak unazad (po z osi koliko su delovi puta za napred i nazad udaljeni)
-        1.f,   // pocetna visina
+        1.5f,   // pocetna visina
         4.0f,   // amplitude (za vrhove i doline)
         3      // broj brda
         );

@@ -64,109 +64,104 @@ void Cart::generateCart()
     glm::vec3 N = glm::normalize(glm::cross(glm::vec3(0, 1, 0), T));
     glm::vec3 B = glm::normalize(glm::cross(T, N));
 
-    // lambda za transformaciju lokalnog kvadra u svet
-    auto transformVertex = [&](const glm::vec3& local) -> glm::vec3 {
-        return p + local.x * N + local.y * B + local.z * T;
-        };
-
     // ================= SPOLJA =================
     addQuad(
-        transformVertex({ -hw, -hh,  hd }),
-        transformVertex({ hw, -hh,  hd }),
-        transformVertex({ hw,  hh,  hd }),
-        transformVertex({ -hw,  hh,  hd })
+        { -hw, -hh, hd },
+        { hw, -hh,  hd },
+        { hw,  hh,  hd },
+        { -hw, hh, hd }
     );
     addQuad(
-        transformVertex({ hw, -hh, -hd }),
-        transformVertex({ -hw, -hh, -hd }),
-        transformVertex({ -hw,  hh, -hd }),
-        transformVertex({ hw,  hh, -hd })
+        { hw, -hh, -hd },
+        { -hw, -hh, -hd },
+        { -hw,  hh, -hd },
+        { hw,  hh, -hd }
     );
     addQuad(
-        transformVertex({ -hw, -hh, -hd }),
-        transformVertex({ -hw, -hh,  hd }),
-        transformVertex({ -hw,  hh,  hd }),
-        transformVertex({ -hw,  hh, -hd })
+        { -hw, -hh, -hd },
+        { -hw, -hh,  hd },
+        { -hw,  hh,  hd },
+        { -hw,  hh, -hd }
     );
     addQuad(
-        transformVertex({ hw, -hh,  hd }),
-        transformVertex({ hw, -hh, -hd }),
-        transformVertex({ hw,  hh, -hd }),
-        transformVertex({ hw,  hh,  hd })
+        { hw, -hh,  hd },
+        { hw, -hh, -hd },
+        { hw,  hh, -hd },
+        { hw,  hh,  hd }
     );
     addQuad(
-        transformVertex({ -hw, -hh, -hd }),
-        transformVertex({ hw, -hh, -hd }),
-        transformVertex({ hw, -hh,  hd }),
-        transformVertex({ -hw, -hh,  hd })
+        { -hw, -hh, -hd },
+        { hw, -hh, -hd },
+        { hw, -hh,  hd },
+        { -hw, -hh,  hd }
     );
 
     // ================= UNUTRA =================
     addQuad(
-        transformVertex({ -ihw, -ihh,  ihd }),
-        transformVertex({ -ihw,  ihh,  ihd }),
-        transformVertex({ ihw,  ihh,  ihd }),
-        transformVertex({ ihw, -ihh,  ihd })
+        { -ihw, -ihh,  ihd },
+        { -ihw,  ihh,  ihd },
+        { ihw,  ihh,  ihd },
+        { ihw, -ihh,  ihd }
     );
     addQuad(
-        transformVertex({ ihw, -ihh, -ihd }),
-        transformVertex({ ihw,  ihh, -ihd }),
-        transformVertex({ -ihw,  ihh, -ihd }),
-        transformVertex({ -ihw, -ihh, -ihd })
+        { ihw, -ihh, -ihd },
+        { ihw,  ihh, -ihd },
+        { -ihw,  ihh, -ihd },
+        { -ihw, -ihh, -ihd }
     );
     addQuad(
-        transformVertex({ -ihw, -ihh,  ihd }),
-        transformVertex({ -ihw, -ihh, -ihd }),
-        transformVertex({ -ihw,  ihh, -ihd }),
-        transformVertex({ -ihw,  ihh,  ihd })
+        { -ihw, -ihh,  ihd },
+        { -ihw, -ihh, -ihd },
+        { -ihw,  ihh, -ihd },
+        { -ihw,  ihh,  ihd }
     );
     addQuad(
-        transformVertex({ ihw, -ihh, -ihd }),
-        transformVertex({ ihw, -ihh,  ihd }),
-        transformVertex({ ihw,  ihh,  ihd }),
-        transformVertex({ ihw,  ihh, -ihd })
+        { ihw, -ihh, -ihd },
+        { ihw, -ihh,  ihd },
+        { ihw,  ihh,  ihd },
+        { ihw,  ihh, -ihd }
     );
 
     float innerBottomOffset = 0.0005f; // da se dno unutra i dno spolja ne preklapaju
     addQuad(
-        transformVertex({ -ihw, -ihh + innerBottomOffset,  ihd }),
-        transformVertex({ ihw, -ihh + innerBottomOffset,  ihd }),
-        transformVertex({ ihw, -ihh+ innerBottomOffset, -ihd }),
-        transformVertex({ -ihw, -ihh + innerBottomOffset, -ihd })
+        { -ihw, -ihh + innerBottomOffset,  ihd },
+        { ihw, -ihh + innerBottomOffset,  ihd },
+        { ihw, -ihh+ innerBottomOffset, -ihd },
+        { -ihw, -ihh + innerBottomOffset, -ihd }
     );
 
     // ================= GORNJI SPOJ SPOLJA I UNUTRA =================
 
     // BACK TOP
     addQuad(
-        transformVertex({ hw,  hh, -hd }),
-        transformVertex({ -hw, hh, -hd }),
-        transformVertex({ -ihw, ihh, -ihd }),
-        transformVertex({ ihw,  ihh, -ihd })
+        { hw,  hh, -hd },
+        { -hw, hh, -hd },
+        { -ihw, ihh, -ihd },
+        { ihw,  ihh, -ihd }
     );
 
     // LEFT TOP
     addQuad(
-        transformVertex({ -hw,  hh, -hd }),
-        transformVertex({ -hw,  hh,  hd }),
-        transformVertex({ -ihw, ihh,  ihd }),
-        transformVertex({ -ihw, ihh, -ihd })
+        { -hw,  hh, -hd },
+        { -hw,  hh,  hd },
+        { -ihw, ihh,  ihd },
+        { -ihw, ihh, -ihd }
     );
 
     // RIGHT TOP
     addQuad(
-        transformVertex({ hw,  hh,  hd }),
-        transformVertex({ hw,  hh, -hd }),
-        transformVertex({ ihw, ihh, -ihd }),
-        transformVertex({ ihw, ihh,  ihd })
+        { hw,  hh,  hd },
+        { hw,  hh, -hd },
+        { ihw, ihh, -ihd },
+        { ihw, ihh,  ihd }
     );
 
     // FRONT TOP
     addQuad(
-        transformVertex({ -hw,  hh,  hd }),
-        transformVertex({ hw,  hh,  hd }),
-        transformVertex({ ihw, ihh, ihd }),
-        transformVertex({ -ihw, ihh, ihd })
+        { -hw,  hh,  hd },
+        { hw,  hh,  hd },
+        { ihw, ihh, ihd },
+        { -ihw, ihh, ihd }
     );
 
     // ================= MESH =================
@@ -209,7 +204,7 @@ void Cart::update()
     rot[3] = glm::vec4(0, 0, 0, 1);
 
     // translacija
-    float yCartOffset = 0.33;
+    float yCartOffset = height * 3.15;
     p.y += yCartOffset;
     glm::mat4 trans = glm::translate(glm::mat4(1.0f), p);
 

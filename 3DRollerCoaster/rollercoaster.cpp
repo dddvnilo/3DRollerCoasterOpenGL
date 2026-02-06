@@ -33,8 +33,8 @@ void RollerCoaster::generateRails()
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
-    float halfRailW = 0.05f;                    // sirina jedne sine (polovina)
-    glm::vec3 halfRailH = glm::vec3(0, railThickness * 0.5f, 0);     // visina (polovina)
+    float halfRailW = trackWidth * 0.1f;         // sirina jedne sine (polovina)
+    float halfRailH = railThickness * 0.5f;     // visina (polovina)
 
     auto addQuad = [&](const glm::vec3& v0,
         const glm::vec3& v1,
@@ -78,16 +78,16 @@ void RollerCoaster::generateRails()
             glm::vec3 center1 = p1 + (float)side * N * (trackWidth * 0.5f);
 
             // BACK (t0)
-            glm::vec3 bl = center0 - N * halfRailW + B - halfRailH;
-            glm::vec3 br = center0 + N * halfRailW + B - halfRailH;
-            glm::vec3 tl = center0 - N * halfRailW + B + halfRailH;
-            glm::vec3 tr = center0 + N * halfRailW + B + halfRailH;
+            glm::vec3 bl = center0 - N * halfRailW + B * - halfRailH;
+            glm::vec3 br = center0 + N * halfRailW + B * - halfRailH;
+            glm::vec3 tl = center0 - N * halfRailW + B * + halfRailH;
+            glm::vec3 tr = center0 + N * halfRailW + B * + halfRailH;
 
             // FRONT (t1)
-            glm::vec3 fbl = center1 - N * halfRailW + B - halfRailH;
-            glm::vec3 fbr = center1 + N * halfRailW + B - halfRailH;
-            glm::vec3 ftl = center1 - N * halfRailW + B + halfRailH;
-            glm::vec3 ftr = center1 + N * halfRailW + B + halfRailH;
+            glm::vec3 fbl = center1 - N * halfRailW + B * - halfRailH;
+            glm::vec3 fbr = center1 + N * halfRailW + B * - halfRailH;
+            glm::vec3 ftl = center1 - N * halfRailW + B * + halfRailH;
+            glm::vec3 ftr = center1 + N * halfRailW + B * + halfRailH;
 
             // front
             addQuad(ftl, ftr, fbr, fbl,
@@ -129,8 +129,7 @@ void RollerCoaster::generatePlanks() {
     float accumulatedDistance = 0.0f;
     glm::vec3 prevPoint = path->getPoint(0.0f);
 
-    glm::vec3 plankThickness = glm::vec3(0, railThickness * 0.25, 0); // debljina daske (vertikalno gore-dole)
-    //float plankThickness = railThickness * 0.25f;
+    float plankThickness = railThickness * 0.25f; // debljina daske (vertikalno gore-dole)
     float halfWidth = trackWidth * 0.7f; // sirina daske
     float plankLength = 0.25f;
 
@@ -162,15 +161,15 @@ void RollerCoaster::generatePlanks() {
             glm::vec3 backCenter = p - T * plankLength;
 
             // 8 verteksa celog kvadra
-            glm::vec3 bl = backCenter - N * halfWidth + B - plankThickness;                        // back-left-bottom
-            glm::vec3 br = backCenter + N * halfWidth + B - plankThickness;                        // back-right-bottom
-            glm::vec3 tl = backCenter - N * halfWidth + B + plankThickness;                         // back-left-top
-            glm::vec3 tr = backCenter + N * halfWidth + B + plankThickness;   // back-right-top
+            glm::vec3 bl = backCenter - N * halfWidth + B * - plankThickness;                        // back-left-bottom
+            glm::vec3 br = backCenter + N * halfWidth + B * - plankThickness;                        // back-right-bottom
+            glm::vec3 tl = backCenter - N * halfWidth + B * + plankThickness;                         // back-left-top
+            glm::vec3 tr = backCenter + N * halfWidth + B * + plankThickness;   // back-right-top
 
-            glm::vec3 fbl = frontCenter - N * halfWidth + B - plankThickness;                      // front-left-bottom
-            glm::vec3 fbr = frontCenter + N * halfWidth + B - plankThickness;                      // front-right-bottom
-            glm::vec3 ftl = frontCenter - N * halfWidth + B + plankThickness; // front-left-top
-            glm::vec3 ftr = frontCenter + N * halfWidth + B + plankThickness; // front-right-top
+            glm::vec3 fbl = frontCenter - N * halfWidth + B * - plankThickness;                      // front-left-bottom
+            glm::vec3 fbr = frontCenter + N * halfWidth + B * - plankThickness;                      // front-right-bottom
+            glm::vec3 ftl = frontCenter - N * halfWidth + B * + plankThickness; // front-left-top
+            glm::vec3 ftr = frontCenter + N * halfWidth + B * + plankThickness; // front-right-top
 
             // dodavanje svih 6 strana kvadra
             addQuad(ftl, ftr, fbr, fbl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));   // front
@@ -236,7 +235,7 @@ void RollerCoaster::generateSleepers()
 
         for (int side = -1; side <= 1; side += 2)
         {
-            glm::vec3 railPos = p + (float)side * N * (trackWidth * 0.5f) + B;
+            glm::vec3 railPos = p + (float)side * N * (trackWidth * 0.5f);
 
             float y0 = 0.0f;
             float y1 = railPos.y - 0.02f;
