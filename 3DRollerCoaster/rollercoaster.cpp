@@ -19,179 +19,184 @@ samples(samples)
     textures_loaded.clear();
 
     generateRails();
+    generatePlanks();
     generateSleepers();
 }
 
-// ================= RAILS =================
-void RollerCoaster::generateRails() {
+// ==================== METALNE SINE ====================
+void RollerCoaster::generateRails()
+{
     meshes.clear();
 
     glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
-    float halfRailW = trackWidth * 0.5f;
-    float halfRailH = railThickness * 0.5f;
 
-    // ==================== METALNE SINE ====================
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    float halfRailW = 0.05f;                    // sirina jedne sine (polovina)
+    glm::vec3 halfRailH = glm::vec3(0, railThickness * 0.5f, 0);     // visina (polovina)
+
+    auto addQuad = [&](const glm::vec3& v0,
+        const glm::vec3& v1,
+        const glm::vec3& v2,
+        const glm::vec3& v3,
+        const glm::vec2& uv0,
+        const glm::vec2& uv1,
+        const glm::vec2& uv2,
+        const glm::vec2& uv3)
+        {
+            glm::vec3 normal = glm::normalize(glm::cross(v2 - v0, v1 - v0));
+            unsigned int base = vertices.size();
+
+            vertices.push_back({ v0, normal, uv0 });
+            vertices.push_back({ v1, normal, uv1 });
+            vertices.push_back({ v2, normal, uv2 });
+            vertices.push_back({ v3, normal, uv3 });
+
+            indices.insert(indices.end(),
+                {
+                    base, base + 3, base + 2,
+                    base, base + 2, base + 1
+                });
+        };
+
+    for (int i = 0; i < samples; i++)
     {
-        std::vector<Vertex> metalVertices;
-        std::vector<unsigned int> metalIndices;
+        float t0 = float(i) / samples;
+        float t1 = float(i + 1) / samples;
 
-        float halfRailW = 0.05f;
-        float halfRailH = railThickness * 0.5f;
-        float halfRailD = 0.0f;
+        glm::vec3 p0 = path->getPoint(t0);
+        glm::vec3 p1 = path->getPoint(t1);
 
-        auto addQuad = [&](const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3,
-            const glm::vec2& uv0, const glm::vec2& uv1, const glm::vec2& uv2, const glm::vec2& uv3)
-            {
-                glm::vec3 normal = glm::normalize(glm::cross(v2 - v0, v1 - v0));
-                unsigned int base = metalVertices.size();
-                metalVertices.push_back({ v0, normal, uv0 });
-                metalVertices.push_back({ v1, normal, uv1 });
-                metalVertices.push_back({ v2, normal, uv2 });
-                metalVertices.push_back({ v3, normal, uv3 });
+        glm::vec3 T = glm::normalize(p1 - p0);
+        glm::vec3 N = glm::normalize(glm::cross(worldUp, T));
+        glm::vec3 B = glm::normalize(glm::cross(T, N));
 
-                metalIndices.insert(metalIndices.end(),
-                    { base, base + 3, base + 2, base, base + 2, base + 1});
-            };
+        for (int side = -1; side <= 1; side += 2)
+        {
+            glm::vec3 center0 = p0 + (float)side * N * (trackWidth * 0.5f);
+            glm::vec3 center1 = p1 + (float)side * N * (trackWidth * 0.5f);
 
-        for (int i = 0; i < samples; i++) {
-            float t0 = float(i) / samples;
-            float t1 = float(i + 1) / samples;
+            // BACK (t0)
+            glm::vec3 bl = center0 - N * halfRailW + B - halfRailH;
+            glm::vec3 br = center0 + N * halfRailW + B - halfRailH;
+            glm::vec3 tl = center0 - N * halfRailW + B + halfRailH;
+            glm::vec3 tr = center0 + N * halfRailW + B + halfRailH;
 
-            glm::vec3 p0 = path->getPoint(t0);
-            glm::vec3 p1 = path->getPoint(t1);
+            // FRONT (t1)
+            glm::vec3 fbl = center1 - N * halfRailW + B - halfRailH;
+            glm::vec3 fbr = center1 + N * halfRailW + B - halfRailH;
+            glm::vec3 ftl = center1 - N * halfRailW + B + halfRailH;
+            glm::vec3 ftr = center1 + N * halfRailW + B + halfRailH;
 
-            glm::vec3 T = glm::normalize(p1 - p0);
+            // front
+            addQuad(ftl, ftr, fbr, fbl,
+                { 0,1 }, { 1,1 }, { 1,0 }, { 0,0 });
+            // back
+            addQuad(bl, br, tr, tl,
+                { 0,0 }, { 1,0 }, { 1,1 }, { 0,1 });
+            // left
+            addQuad(bl, tl, ftl, fbl,
+                { 0,0 }, { 0,1 }, { 1,1 }, { 1,0 });
+            // right
+            addQuad(br, fbr, ftr, tr,
+                { 0,0 }, { 1,0 }, { 1,1 }, { 0,1 });
+            // bottom
+            addQuad(fbl, fbr, br, bl,
+                { 0,0 }, { 1,0 }, { 1,1 }, { 0,1 });
+            // top
+            addQuad(tl, tr, ftr, ftl,
+                { 0,1 }, { 1,1 }, { 1,0 }, { 0,0 });
+        }
+    }
+
+    std::vector<Texture> railTextures;
+    Texture railTex;
+    railTex.id = railTexID;
+    railTex.type = "uDiffMap";
+    railTex.path = "";
+    railTextures.push_back(railTex);
+
+    meshes.push_back(Mesh(vertices, indices, railTextures));
+}
+
+// ==================== DRVENA POPUNA - DASKE ====================
+void RollerCoaster::generatePlanks() {
+    std::vector<Vertex> woodVertices;
+    std::vector<unsigned int> woodIndices;
+
+    float desiredStep = 0.8f; // razmak izmedju daski
+    float accumulatedDistance = 0.0f;
+    glm::vec3 prevPoint = path->getPoint(0.0f);
+
+    glm::vec3 plankThickness = glm::vec3(0, railThickness * 0.25, 0); // debljina daske (vertikalno gore-dole)
+    //float plankThickness = railThickness * 0.25f;
+    float halfWidth = trackWidth * 0.7f; // sirina daske
+    float plankLength = 0.25f;
+
+    // lambda funkcija koja dodaje stranicu kvadra i automatski racuna normalu svake stranice
+    auto addQuad = [&](const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3,
+        const glm::vec2& uv0, const glm::vec2& uv1, const glm::vec2& uv2, const glm::vec2& uv3)
+        {
+            glm::vec3 normal = glm::normalize(glm::cross(v2 - v0, v1 - v0));
+            unsigned int base = woodVertices.size();
+            woodVertices.push_back({ v0, normal, uv0 });
+            woodVertices.push_back({ v1, normal, uv1 });
+            woodVertices.push_back({ v2, normal, uv2 });
+            woodVertices.push_back({ v3, normal, uv3 });
+
+            woodIndices.insert(woodIndices.end(), { base, base + 3, base + 2, base, base + 2, base + 1 });
+        };
+
+    for (int i = 1; i <= samples; i++) {
+        float t = float(i) / samples;
+        glm::vec3 p = path->getPoint(t);
+        accumulatedDistance += glm::length(p - prevPoint);
+
+        if (accumulatedDistance >= desiredStep) {
+            glm::vec3 T = path->getTangent(t);
             glm::vec3 N = glm::normalize(glm::cross(glm::vec3(0, 1, 0), T));
             glm::vec3 B = glm::normalize(glm::cross(T, N));
 
-            for (int side = -1; side <= 1; side += 2) {
-                glm::vec3 center0 = p0 + (float)side * N * (trackWidth * 0.5f);
-                glm::vec3 center1 = p1 + (float)side * N * (trackWidth * 0.5f);
+            glm::vec3 frontCenter = p;
+            glm::vec3 backCenter = p - T * plankLength;
 
-                float halfRailW = 0.05f;                    // sirina sine
-                float halfRailH = railThickness * 0.5f;     // visina
+            // 8 verteksa celog kvadra
+            glm::vec3 bl = backCenter - N * halfWidth + B - plankThickness;                        // back-left-bottom
+            glm::vec3 br = backCenter + N * halfWidth + B - plankThickness;                        // back-right-bottom
+            glm::vec3 tl = backCenter - N * halfWidth + B + plankThickness;                         // back-left-top
+            glm::vec3 tr = backCenter + N * halfWidth + B + plankThickness;   // back-right-top
 
-                // 8 verteksa kvadra segmenta (nisam znao kako da izvlacim kvadar po putanji pa je sastavljen iz vise segmenata - vise kvadara) sine
-                glm::vec3 bl = center0 - N * halfRailW - B * halfRailH; // back-bottom-left
-                glm::vec3 br = center0 + N * halfRailW - B * halfRailH; // back-bottom-right
-                glm::vec3 tl = center0 - N * halfRailW + B * halfRailH; // back-top-left
-                glm::vec3 tr = center0 + N * halfRailW + B * halfRailH; // back-top-right
+            glm::vec3 fbl = frontCenter - N * halfWidth + B - plankThickness;                      // front-left-bottom
+            glm::vec3 fbr = frontCenter + N * halfWidth + B - plankThickness;                      // front-right-bottom
+            glm::vec3 ftl = frontCenter - N * halfWidth + B + plankThickness; // front-left-top
+            glm::vec3 ftr = frontCenter + N * halfWidth + B + plankThickness; // front-right-top
 
-                glm::vec3 fbl = center1 - N * halfRailW - B * halfRailH; // front-bottom-left
-                glm::vec3 fbr = center1 + N * halfRailW - B * halfRailH; // front-bottom-right
-                glm::vec3 ftl = center1 - N * halfRailW + B * halfRailH; // front-top-left
-                glm::vec3 ftr = center1 + N * halfRailW + B * halfRailH; // front-top-right
+            // dodavanje svih 6 strana kvadra
+            addQuad(ftl, ftr, fbr, fbl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));   // front
+            addQuad(bl, br, tr, tl, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));       // back
+            addQuad(bl, tl, ftl, fbl, glm::vec2(0, 0), glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0));     // left
+            addQuad(br, fbr, ftr, tr, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));     // right
+            addQuad(fbl, fbr, br, bl, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));     // bottom
+            addQuad(tl, tr, ftr, ftl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));     // top
 
-                // dodavanje svih 6 strana kvadra sine
-                addQuad(ftl, ftr, fbr, fbl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));   // front
-                addQuad(bl, br, tr, tl, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));       // back
-                addQuad(bl, tl, ftl, fbl, glm::vec2(0, 0), glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0));     // left
-                addQuad(br, fbr, ftr, tr, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));     // right
-                addQuad(fbl, fbr, br, bl, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));     // bottom
-                addQuad(tl, tr, ftr, ftl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));     // top
-            }
+            accumulatedDistance = 0.0f;
+            prevPoint = p;
         }
-
-        std::vector<Texture> railTextures;
-        Texture railTex;
-        railTex.id = railTexID;
-        railTex.type = "uDiffMap";
-        railTex.path = "";
-        railTextures.push_back(railTex);
-        Mesh metalMesh(metalVertices, metalIndices, railTextures);
-        meshes.push_back(metalMesh);
+        else {
+            prevPoint = p;
+        }
     }
 
-    // ==================== DRVENA POPUNA - DASKE ====================
-    {
-        std::vector<Vertex> woodVertices;
-        std::vector<unsigned int> woodIndices;
-
-        float desiredStep = 0.8f; // razmak izmedju daski
-        float accumulatedDistance = 0.0f;
-        glm::vec3 prevPoint = path->getPoint(0.0f);
-
-        float plankThickness = railThickness * 0.7; // debljina daske (vertikalno gore-dole)
-        float halfWidth = trackWidth * 0.7f; // sirina daske
-        float plankLength = 0.25f;
-
-        // lambda funkcija koja dodaje stranicu kvadra i automatski racuna normalu svake stranice
-        auto addQuad = [&](const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3,
-            const glm::vec2& uv0, const glm::vec2& uv1, const glm::vec2& uv2, const glm::vec2& uv3)
-            {
-                glm::vec3 normal = glm::normalize(glm::cross(v2 - v0, v1 - v0));
-                unsigned int base = woodVertices.size();
-                woodVertices.push_back({ v0, normal, uv0 });
-                woodVertices.push_back({ v1, normal, uv1 });
-                woodVertices.push_back({ v2, normal, uv2 });
-                woodVertices.push_back({ v3, normal, uv3 });
-
-                woodIndices.insert(woodIndices.end(), { base, base + 3, base + 2, base, base + 2, base + 1 });
-            };
-
-        for (int i = 1; i <= samples; i++) {
-            float t = float(i) / samples;
-            glm::vec3 p = path->getPoint(t);
-            accumulatedDistance += glm::length(p - prevPoint);
-
-            if (accumulatedDistance >= desiredStep) {
-                glm::vec3 T = path->getTangent(t);
-                glm::vec3 N = glm::normalize(glm::cross(glm::vec3(0, 1, 0), T));
-                glm::vec3 B = glm::normalize(glm::cross(T, N));
-
-                glm::vec3 frontCenter = p;
-                glm::vec3 backCenter = p - T * plankLength;
-
-                // 8 verteksa celog kvadra
-                glm::vec3 bl = backCenter - N * halfWidth;                        // back-left-bottom
-                glm::vec3 br = backCenter + N * halfWidth;                        // back-right-bottom
-                glm::vec3 tl = backCenter - N * halfWidth + B * plankThickness;   // back-left-top
-                glm::vec3 tr = backCenter + N * halfWidth + B * plankThickness;   // back-right-top
-
-                glm::vec3 fbl = frontCenter - N * halfWidth;                      // front-left-bottom
-                glm::vec3 fbr = frontCenter + N * halfWidth;                      // front-right-bottom
-                glm::vec3 ftl = frontCenter - N * halfWidth + B * plankThickness; // front-left-top
-                glm::vec3 ftr = frontCenter + N * halfWidth + B * plankThickness; // front-right-top
-
-                // stelovanje da plank bude negde po sredini kroz sine
-                float yPlankOffset = 0.05f;
-                tl.y -= yPlankOffset;
-                tr.y -= yPlankOffset;
-                ftl.y -= yPlankOffset;
-                ftr.y -= yPlankOffset;
-                bl.y -= yPlankOffset;
-                br.y -= yPlankOffset;
-                fbl.y -= yPlankOffset;
-                fbr.y -= yPlankOffset;
-
-                // dodavanje svih 6 strana kvadra
-                addQuad(ftl, ftr, fbr, fbl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));   // front
-                addQuad(bl, br, tr, tl, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));       // back
-                addQuad(bl, tl, ftl, fbl, glm::vec2(0, 0), glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0));     // left
-                addQuad(br, fbr, ftr, tr, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));     // right
-                addQuad(fbl, fbr, br, bl, glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1));     // bottom
-                addQuad(tl, tr, ftr, ftl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));     // top
-
-                accumulatedDistance = 0.0f;
-                prevPoint = p;
-            }
-            else {
-                prevPoint = p;
-            }
-        }
-
-        std::vector<Texture> woodTextures;
-        Texture woodTex;
-        woodTex.id = woodTexID;
-        woodTex.type = "uDiffMap";
-        woodTex.path = "";
-        woodTextures.push_back(woodTex);
-        Mesh woodMesh(woodVertices, woodIndices, woodTextures);
-        meshes.push_back(woodMesh);
-    }
+    std::vector<Texture> woodTextures;
+    Texture woodTex;
+    woodTex.id = woodTexID;
+    woodTex.type = "uDiffMap";
+    woodTex.path = "";
+    woodTextures.push_back(woodTex);
+    Mesh woodMesh(woodVertices, woodIndices, woodTextures);
+    meshes.push_back(woodMesh);
 }
-
-
 
 // ================= SLEEPERS =================
 void RollerCoaster::generateSleepers()
@@ -227,10 +232,11 @@ void RollerCoaster::generateSleepers()
 
         glm::vec3 T = path->getTangent(t);
         glm::vec3 N = glm::normalize(glm::cross(worldUp, T));
+        glm::vec3 B = glm::normalize(glm::cross(T, N));
 
         for (int side = -1; side <= 1; side += 2)
         {
-            glm::vec3 railPos = p + (float)side * N * (trackWidth * 0.5f);
+            glm::vec3 railPos = p + (float)side * N * (trackWidth * 0.5f) + B;
 
             float y0 = 0.0f;
             float y1 = railPos.y - 0.02f;

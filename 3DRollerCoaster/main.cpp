@@ -20,8 +20,8 @@
 #include "rollercoaster.hpp"
 #include "cart.hpp"
 
-bool useTex = false;
-bool transparent = true;
+// modeli
+Cart* cart;
 
 // teksture
 unsigned int groundTexture;
@@ -45,11 +45,8 @@ glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0); // at-vektor je inicijalno u 
 float movementSpeedMult = 0.04f;
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_G && action == GLFW_PRESS) {
-        useTex = !useTex;
-    }
-    if (key == GLFW_KEY_T && action == GLFW_PRESS) {
-        transparent = !transparent;
+    if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
+        cart->cartMoving = true;
     }
 }
 
@@ -183,7 +180,7 @@ int main(void)
     Path path(
         40.0f,  // duzina
         3.0f,   // offset za deo puta za povratak unazad (po z osi koliko su delovi puta za napred i nazad udaljeni)
-        0.1f,   // pocetna visina
+        1.f,   // pocetna visina
         4.0f,   // amplitude (za vrhove i doline)
         3      // broj brda
         );
@@ -191,17 +188,17 @@ int main(void)
     RollerCoaster rollercoaster(
         &path,  // putanja
         1.2f,   // sirina sina
-        0.15f,  // debljina samog rail-a
+        0.2f,  // debljina samog rail-a
         5000,   // rezolucija
         metalTexture,
         woodTexture
     );
     // kreiranje cart-a
-    Cart cart(
+    cart = new Cart(
         &path,  // putanja
-        1.4f,   // width
-        0.5f,   // height
-        2.0f,   // depth
+        0.5f,   // width
+        0.25f,   // height
+        1.f,   // depth
         0.05f,  // wall thickness
         cartTexture
     );
@@ -259,7 +256,7 @@ int main(void)
             cameraPos -= movementSpeedMult * glm::normalize(glm::vec3(cameraFront.x, 0, cameraFront.z));
         }
 
-        // CRTANJE GROUND-A
+        // ======= ISCRTAVANJE MODELA ========
         basicShader.use();
         glm::mat4 groundModel = glm::mat4(1.0f);
         basicShader.setMat4("uM", groundModel);
@@ -270,7 +267,10 @@ int main(void)
         // crtanje rolerkostera
         rollercoaster.Draw(basicShader);
         // crtanje cart-a
-        cart.Draw(basicShader);
+        cart->update();
+        basicShader.setMat4("uM", cart->getModelMatrix());
+        cart->Draw(basicShader);
+
         while (glfwGetTime() - startTime < 1.0 / 60) {}
         glfwSwapBuffers(window);
         glfwPollEvents();

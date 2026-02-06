@@ -24,5 +24,6 @@ private:
     int samples;
 
     void generateRails();
+    void generatePlanks();
     void generateSleepers();
 };

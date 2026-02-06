@@ -20,6 +20,10 @@ texID(texID)
     generateCart();
 }
 
+glm::mat4 Cart::getModelMatrix() {
+    return modelMatrix;
+}
+
 void Cart::generateCart()
 {
     if (!path) return;
@@ -27,9 +31,9 @@ void Cart::generateCart()
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
-    float hw = width * 0.5f;
-    float hh = height * 0.5f;
-    float hd = depth * 0.5f;
+    float hw = width;
+    float hh = height;
+    float hd = depth;
 
     float ihw = hw - wall;
     float ihh = hh;
@@ -60,10 +64,9 @@ void Cart::generateCart()
     glm::vec3 N = glm::normalize(glm::cross(glm::vec3(0, 1, 0), T));
     glm::vec3 B = glm::normalize(glm::cross(T, N));
 
-    float yOffset = 0.4f;
     // lambda za transformaciju lokalnog kvadra u svet
     auto transformVertex = [&](const glm::vec3& local) -> glm::vec3 {
-        return p + local.x * N + local.y * B + local.z * T + yOffset * B;
+        return p + local.x * N + local.y * B + local.z * T;
         };
 
     // ================= SPOLJA =================
@@ -177,3 +180,39 @@ void Cart::generateCart()
     meshes.push_back(Mesh(vertices, indices, textures));
 }
 
+void Cart::update()
+{
+    if (!path) return;
+
+    if (!cartMoving)
+        t = 0.0f;
+    else {
+        t += speed;
+        if (t > 1.0f) {
+            t = 1.0f;
+            cartMoving = false;
+        }
+    }
+
+    glm::vec3 p = path->getPoint(t);
+    glm::vec3 T = glm::normalize(path->getTangent(t));
+
+    glm::vec3 worldUp(0,1,0);
+    glm::vec3 N = glm::normalize(glm::cross(worldUp, T));
+    glm::vec3 B = glm::normalize(glm::cross(T, N));
+
+    // kreiramo 4x4 matricu iz kolona (X=N, Y=B, Z=T)
+    glm::mat4 rot;
+    rot[0] = glm::vec4(N, 0.0f);
+    rot[1] = glm::vec4(B, 0.0f);
+    rot[2] = glm::vec4(T, 0.0f);
+    rot[3] = glm::vec4(0, 0, 0, 1);
+
+    // translacija
+    float yCartOffset = 0.33;
+    p.y += yCartOffset;
+    glm::mat4 trans = glm::translate(glm::mat4(1.0f), p);
+
+    // MODEL: translacija prvo, pa rotacija
+    modelMatrix = trans*rot;
+}
