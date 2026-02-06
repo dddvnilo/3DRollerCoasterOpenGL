@@ -33,8 +33,8 @@ void RollerCoaster::generateRails()
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
-    float halfRailW = trackWidth * 0.1f;         // sirina jedne sine (polovina)
-    float halfRailH = railThickness * 0.5f;     // visina (polovina)
+    float halfRailW = trackWidth * 0.1f;          // sirina jedne sine (polovina, kao)
+    float halfRailH = railThickness * 0.5f;       // visina (polovina)
 
     auto addQuad = [&](const glm::vec3& v0,
         const glm::vec3& v1,
@@ -77,13 +77,13 @@ void RollerCoaster::generateRails()
             glm::vec3 center0 = p0 + (float)side * N * (trackWidth * 0.5f);
             glm::vec3 center1 = p1 + (float)side * N * (trackWidth * 0.5f);
 
-            // BACK (t0)
+            // back
             glm::vec3 bl = center0 - N * halfRailW + B * - halfRailH;
             glm::vec3 br = center0 + N * halfRailW + B * - halfRailH;
             glm::vec3 tl = center0 - N * halfRailW + B * + halfRailH;
             glm::vec3 tr = center0 + N * halfRailW + B * + halfRailH;
 
-            // FRONT (t1)
+            // front
             glm::vec3 fbl = center1 - N * halfRailW + B * - halfRailH;
             glm::vec3 fbr = center1 + N * halfRailW + B * - halfRailH;
             glm::vec3 ftl = center1 - N * halfRailW + B * + halfRailH;
@@ -125,12 +125,12 @@ void RollerCoaster::generatePlanks() {
     std::vector<Vertex> woodVertices;
     std::vector<unsigned int> woodIndices;
 
-    float desiredStep = 0.8f; // razmak izmedju daski
+    float desiredStep = 0.8f;                     // razmak izmedju dasaka
     float accumulatedDistance = 0.0f;
     glm::vec3 prevPoint = path->getPoint(0.0f);
 
     float plankThickness = railThickness * 0.25f; // debljina daske (vertikalno gore-dole)
-    float halfWidth = trackWidth * 0.7f; // sirina daske
+    float halfWidth = trackWidth * 0.7f;          // sirina daske
     float plankLength = 0.25f;
 
     // lambda funkcija koja dodaje stranicu kvadra i automatski racuna normalu svake stranice
@@ -163,13 +163,13 @@ void RollerCoaster::generatePlanks() {
             // 8 verteksa celog kvadra
             glm::vec3 bl = backCenter - N * halfWidth + B * - plankThickness;                        // back-left-bottom
             glm::vec3 br = backCenter + N * halfWidth + B * - plankThickness;                        // back-right-bottom
-            glm::vec3 tl = backCenter - N * halfWidth + B * + plankThickness;                         // back-left-top
-            glm::vec3 tr = backCenter + N * halfWidth + B * + plankThickness;   // back-right-top
+            glm::vec3 tl = backCenter - N * halfWidth + B * + plankThickness;                        // back-left-top
+            glm::vec3 tr = backCenter + N * halfWidth + B * + plankThickness;                        // back-right-top
 
             glm::vec3 fbl = frontCenter - N * halfWidth + B * - plankThickness;                      // front-left-bottom
             glm::vec3 fbr = frontCenter + N * halfWidth + B * - plankThickness;                      // front-right-bottom
-            glm::vec3 ftl = frontCenter - N * halfWidth + B * + plankThickness; // front-left-top
-            glm::vec3 ftr = frontCenter + N * halfWidth + B * + plankThickness; // front-right-top
+            glm::vec3 ftl = frontCenter - N * halfWidth + B * + plankThickness;                      // front-left-top
+            glm::vec3 ftr = frontCenter + N * halfWidth + B * + plankThickness;                      // front-right-top
 
             // dodavanje svih 6 strana kvadra
             addQuad(ftl, ftr, fbr, fbl, glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0), glm::vec2(0, 0));   // front

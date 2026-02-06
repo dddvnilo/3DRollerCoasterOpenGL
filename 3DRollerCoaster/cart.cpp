@@ -57,8 +57,7 @@ void Cart::generateCart()
                   base, base + 1, base + 2 });
         };
 
-    // uzimamo jedan parametar t da postavimo cart
-    float t = 0.0f; // npr pocetak putanje, kasnije mozemo animirati
+    float t = 0.0f;
     glm::vec3 p = path->getPoint(t);
     glm::vec3 T = path->getTangent(t);
     glm::vec3 N = glm::normalize(glm::cross(glm::vec3(0, 1, 0), T));
@@ -164,7 +163,6 @@ void Cart::generateCart()
         { -ihw, ihh, ihd }
     );
 
-    // ================= MESH =================
     std::vector<Texture> textures;
     Texture tex;
     tex.id = texID;
@@ -182,10 +180,30 @@ void Cart::update()
     if (!cartMoving)
         t = 0.0f;
     else {
+        glm::vec3 p = path->getPoint(t);
+        glm::vec3 nextP = path->getPoint(std::min(t + 0.001f, 1.0f)); // mali korak za nagib
+        float dy = nextP.y - p.y; // razlika visine
+
+        if (dy > 0.0f) { // uzbrdo
+            speed /= decceleration; // usporava
+            if (speed <= acceleration * 2.f) // da ne bude presporo
+                speed = acceleration * 2.f;
+        }
+        if (dy < 0.0f) {
+            speed += acceleration;
+        }
+        if (dy == 0.0f) {
+            speed += acceleration;
+            if (speed >= topSpeed) // na ravnom postoji granica za ubrzanje
+                speed == topSpeed;
+        }
+
+        // update po transliranoj koordinati kola
         t += speed;
         if (t > 1.0f) {
             t = 1.0f;
             cartMoving = false;
+            speed = 0.0f;
         }
     }
 
@@ -208,6 +226,6 @@ void Cart::update()
     p.y += yCartOffset;
     glm::mat4 trans = glm::translate(glm::mat4(1.0f), p);
 
-    // MODEL: translacija prvo, pa rotacija
+    // update-ujemo model matricu: translacija prvo, pa rotacija
     modelMatrix = trans*rot;
 }
