@@ -332,26 +332,15 @@ void RollerCoaster::generateSleepers()
             glm::vec3 p0(railPos.x, y0, railPos.z);
             glm::vec3 p1(railPos.x, y1, railPos.z);
 
-            // 8 pozicija verteksa (vertex position)
-            glm::vec3 corners[8] = {
-                p0 + glm::vec3(-hw, 0, -hd), // 0 bottom-left-back
-                p0 + glm::vec3(hw,0,-hd),  // 1 bottom-right-back
-                p0 + glm::vec3(hw, 0, hd),  // 2 bottom-right-front
-                p0 + glm::vec3(-hw,0, hd), // 3 bottom-left-front
-                p1 + glm::vec3(-hw,0,-hd), // 4 top-left-back
-                p1 + glm::vec3(hw,0,-hd),  // 5 top-right-back
-                p1 + glm::vec3(hw,0, hd),  // 6 top-right-front
-                p1 + glm::vec3(-hw,0, hd)  // 7 top-left-front
-            };
-            glm::vec3 bl = p0 + glm::vec3(-hw, 0, -hd);                        // back-left-bottom
-            glm::vec3 br = p0 + glm::vec3(hw, 0, -hd);                        // back-right-bottom
-            glm::vec3 tl = p1 + glm::vec3(-hw, 0, -hd);   // back-left-top
-            glm::vec3 tr = p1 + glm::vec3(hw, 0, -hd);   // back-right-top
+            glm::vec3 bl = p0 + glm::vec3(-hw, 0, -hd);                     // back-left-bottom
+            glm::vec3 br = p0 + glm::vec3(hw, 0, -hd);                      // back-right-bottom
+            glm::vec3 tl = p1 + glm::vec3(-hw, 0, -hd);                     // back-left-top
+            glm::vec3 tr = p1 + glm::vec3(hw, 0, -hd);                      // back-right-top
 
-            glm::vec3 fbl = p0 + glm::vec3(-hw, 0, hd);                      // front-left-bottom
+            glm::vec3 fbl = p0 + glm::vec3(-hw, 0, hd);                     // front-left-bottom
             glm::vec3 fbr = p0 + glm::vec3(hw, 0, hd);                      // front-right-bottom
-            glm::vec3 ftl = p1 + glm::vec3(-hw, 0, hd); // front-left-top
-            glm::vec3 ftr = p1 + glm::vec3(hw, 0, hd); // front-right-top
+            glm::vec3 ftl = p1 + glm::vec3(-hw, 0, hd);                     // front-left-top
+            glm::vec3 ftr = p1 + glm::vec3(hw, 0, hd);                      // front-right-top
 
             unsigned int base = vertices.size();
 
