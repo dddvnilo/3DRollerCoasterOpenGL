@@ -1,6 +1,8 @@
 ﻿#include <iostream>
 #include <fstream>
 #include <sstream>
+#include <thread>
+#include <chrono>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -208,7 +210,15 @@ int main(void)
 
     while (!glfwWindowShouldClose(window))
     {
-        double startTime = glfwGetTime();
+        // fps
+        double now = glfwGetTime();
+        double timePassed = now - lastFrameTime;
+        if (timePassed < FRAME_TIME) {
+            double waitTime = FRAME_TIME - timePassed;
+            std::this_thread::sleep_for(std::chrono::duration<double>(waitTime));
+            continue;
+        }
+        lastFrameTime = now;
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // osvezavamo i Z bafer i bafer boje
 
@@ -271,7 +281,6 @@ int main(void)
         basicShader.setMat4("uM", cart->getModelMatrix());
         cart->Draw(basicShader);
 
-        while (glfwGetTime() - startTime < 1.0 / 60) {}
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
