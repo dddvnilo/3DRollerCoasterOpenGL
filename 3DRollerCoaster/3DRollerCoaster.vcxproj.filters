@@ -13,6 +13,12 @@
     <ClCompile Include="rollercoaster.cpp">
       <Filter>Source Files\RollerCoaster</Filter>
     </ClCompile>
+    <ClCompile Include="cart.cpp">
+      <Filter>Source Files\Cart</Filter>
+    </ClCompile>
+    <ClCompile Include="path.cpp">
+      <Filter>Source Files\RollerCoaster</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util.h">
@@ -34,6 +40,12 @@
       <Filter>Source Files\Ground</Filter>
     </ClInclude>
     <ClInclude Include="rollercoaster.hpp">
+      <Filter>Source Files\RollerCoaster</Filter>
+    </ClInclude>
+    <ClInclude Include="cart.hpp">
+      <Filter>Source Files\Cart</Filter>
+    </ClInclude>
+    <ClInclude Include="path.hpp">
       <Filter>Source Files\RollerCoaster</Filter>
     </ClInclude>
   </ItemGroup>
@@ -63,6 +75,9 @@
     </Filter>
     <Filter Include="Source Files\RollerCoaster">
       <UniqueIdentifier>{f8aa6c2f-010e-4048-bc95-78e685852f90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Cart">
+      <UniqueIdentifier>{8fc7e6ba-096c-4ffe-be90-91a1a4a3ecb2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -142,8 +142,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="cart.cpp" />
     <ClCompile Include="ground.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="path.cpp" />
     <ClCompile Include="rollercoaster.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
@@ -153,9 +155,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cart.hpp" />
     <ClInclude Include="ground.hpp" />
     <ClInclude Include="mesh.hpp" />
     <ClInclude Include="model.hpp" />
+    <ClInclude Include="path.hpp" />
     <ClInclude Include="rollercoaster.hpp" />
     <ClInclude Include="shader.hpp" />
     <ClInclude Include="stb_image.h" />

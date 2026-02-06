@@ -16,7 +16,9 @@
 
 // moji modeli
 #include "ground.hpp"
+#include "path.hpp"
 #include "rollercoaster.hpp"
+#include "cart.hpp"
 
 bool useTex = false;
 bool transparent = true;
@@ -25,6 +27,7 @@ bool transparent = true;
 unsigned int groundTexture;
 unsigned int woodTexture;
 unsigned int metalTexture;
+unsigned int cartTexture;
 
 // prikaz
 float aspect;                   // aspect ratio
@@ -153,6 +156,7 @@ int main(void)
     groundTexture = preprocessTexture("res/grass.jpg");
     woodTexture = preprocessTexture("res/wood.jpg");
     metalTexture = preprocessTexture("res/metal.jpg");
+    cartTexture = metalTexture;
     
     glClearColor(0.53f, 0.81f, 0.92f, 1.0f); // nebo
     glCullFace(GL_BACK);// biranje lica koje ce se eliminisati (tek nakon sto ukljucimo Face Culling)
@@ -175,18 +179,31 @@ int main(void)
 
     // kreiranje ground-a: sirina=50, duzina=50, subdivisions=50, tekstura
     Ground ground(50.0f, 50.0f, 30, groundTexture);
+    // kreiranje putanje (koriste je rollercoaster i cart)
+    Path path(
+        40.0f,  // duzina
+        3.0f,   // offset za deo puta za povratak unazad (po z osi koliko su delovi puta za napred i nazad udaljeni)
+        0.1f,   // pocetna visina
+        4.0f,   // amplitude (za vrhove i doline)
+        3      // broj brda
+        );
     // kreiranje rolerkostera
     RollerCoaster rollercoaster(
-        40.0f,  // duzina
-        3.0f,   // offset za povratak unazad (po z osi koliko su delovi puta za napred i nazad udaljeni)
-        1.5f,   // pocetna visina
-        4.0f,   // amplitude (za vrhove i doline)
-        3,      // broj brda
+        &path,  // putanja
         1.2f,   // sirina sina
         0.15f,  // debljina samog rail-a
         5000,   // rezolucija
         metalTexture,
         woodTexture
+    );
+    // kreiranje cart-a
+    Cart cart(
+        &path,  // putanja
+        1.4f,   // width
+        0.5f,   // height
+        2.0f,   // depth
+        0.05f,  // wall thickness
+        cartTexture
     );
 
     glEnable(GL_DEPTH_TEST); // inicijalno ukljucivanje Z bafera (kasnije mozemo da iskljucujemo i opet ukljucujemo)
@@ -252,6 +269,8 @@ int main(void)
         ground.Draw(basicShader);
         // crtanje rolerkostera
         rollercoaster.Draw(basicShader);
+        // crtanje cart-a
+        cart.Draw(basicShader);
         while (glfwGetTime() - startTime < 1.0 / 60) {}
         glfwSwapBuffers(window);
         glfwPollEvents();
