@@ -181,21 +181,21 @@ void Cart::update()
         t = 0.0f;
     else {
         glm::vec3 p = path->getPoint(t);
-        glm::vec3 nextP = path->getPoint(std::min(t + 0.001f, 1.0f)); // mali korak za nagib
-        float dy = nextP.y - p.y; // razlika visine
+        glm::vec3 nextP = path->getPoint(std::min(t + 0.001f, 1.0f));   // mali korak za nagib
+        float dy = nextP.y - p.y;                                       // razlika visine
 
-        if (dy > 0.0f) { // uzbrdo
-            speed /= decceleration; // usporava
-            if (speed <= acceleration * 2.f) // da ne bude presporo
-                speed = acceleration * 2.f;
+        if (dy > 0.0f) {                        // uzbrdo
+            speed /= DECELERATION;              // usporava
+            if (speed <= ACCELERATION * 2.f)    // da ne bude presporo
+                speed = ACCELERATION * 2.f;
         }
         if (dy < 0.0f) {
-            speed += acceleration;
+            speed += ACCELERATION;
         }
         if (dy == 0.0f) {
-            speed += acceleration;
-            if (speed >= topSpeed) // na ravnom postoji granica za ubrzanje
-                speed == topSpeed;
+            speed += ACCELERATION;
+            if (speed >= TOP_SPEED)             // na ravnom postoji granica za ubrzanje
+                speed == TOP_SPEED;
         }
 
         // update po transliranoj koordinati kola
