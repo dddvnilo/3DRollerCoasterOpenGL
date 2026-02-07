@@ -188,7 +188,8 @@ int main(void)
     seatedHumanoids.emplace_back("res/models/humanoid4/model.obj", 3); // sediste 3
     seatedHumanoids.emplace_back("res/models/humanoid5/091_W_Aya_10K.obj", 4); // sediste 4
     seatedHumanoids.emplace_back("res/models/humanoid6/Madara_Uchiha.obj", 5); // sediste 5
-    seatedHumanoids.emplace_back("res/models/humanoid7/model.obj", 6); // sediste 5
+    seatedHumanoids.emplace_back("res/models/humanoid7/model.obj", 6); // sediste 6
+    seatedHumanoids.emplace_back("res/models/humanoid8/luke dagobah.obj", 7); // sediste 7
 
     // kreiranje ground-a: sirina=50, duzina=50, subdivisions=50, tekstura
     Ground ground(50.0f, 50.0f, 30, groundTexture);

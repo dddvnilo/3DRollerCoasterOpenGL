@@ -465,6 +465,9 @@ void Cart::updateHumanoids() {
             case 6:
                 humanoidScale = glm::vec3(0.3f, 0.3f, 0.3f);
                 break;
+            case 7:
+                humanoidScale = glm::vec3(0.05f, 0.05f, 0.05f);
+                break;
             default:
                 humanoidScale = glm::vec3(1.0f, 1.0f, 1.0f);
         }
