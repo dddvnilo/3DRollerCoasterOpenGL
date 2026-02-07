@@ -165,7 +165,7 @@ int main(void)
     basicShader.use();
     basicShader.setVec3("uLightPos", 10, 7, 3);
     basicShader.setVec3("uLightPos", 0, 1, -20);
-//    basicShader.setVec3("uLightPos", 0, 4, 5);
+    // basicShader.setVec3("uLightPos", 0, 4, 5);
     basicShader.setVec3("uViewPos", 0, 0, 5);
     basicShader.setVec3("uLightColor", 1, 1, 1);
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
@@ -209,6 +209,9 @@ int main(void)
         woodTexture,
         plasticTexture
     );
+
+    // ucitavanje modela ljudi
+    Model humanoid1("res/models/humanoid1/model.obj");
 
     glEnable(GL_DEPTH_TEST); // inicijalno ukljucivanje Z bafera (kasnije mozemo da iskljucujemo i opet ukljucujemo)
     glEnable(GL_CULL_FACE); // inicijalno ukljucivanje (back)face culling-a
@@ -281,6 +284,8 @@ int main(void)
         ground.Draw(basicShader);
         // crtanje rolerkostera
         rollercoaster.Draw(basicShader);
+        // crtanje coveka
+        humanoid1.Draw(basicShader);
         // crtanje cart-a
         cart->update();
         basicShader.setMat4("uM", cart->getModelMatrix());
