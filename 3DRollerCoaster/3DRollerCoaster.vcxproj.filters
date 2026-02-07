@@ -19,6 +19,9 @@
     <ClCompile Include="path.cpp">
       <Filter>Source Files\RollerCoaster</Filter>
     </ClCompile>
+    <ClCompile Include="ride_controller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util.h">
@@ -48,7 +51,15 @@
     <ClInclude Include="path.hpp">
       <Filter>Source Files\RollerCoaster</Filter>
     </ClInclude>
-    <ClInclude Include="humanoid_model.hpp" />
+    <ClInclude Include="humanoid_model.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ride_controller.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ride_state.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">

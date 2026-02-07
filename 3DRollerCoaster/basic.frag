@@ -11,6 +11,8 @@ uniform vec3 uLightColor;
 
 uniform sampler2D uDiffMap1;
 
+uniform bool applyGreen;
+
 void main()
 {    
 
@@ -31,7 +33,12 @@ void main()
     vec3 specular = specularStrength * spec * uLightColor;  
 
     vec4 texColor = texture(uDiffMap1, chUV);
+    vec4 lighting = texColor * vec4(ambient + diffuse + specular, 1.0);
 
-    FragColor = texture(uDiffMap1, chUV) * vec4(ambient + diffuse + specular, 1.0);
+    if (applyGreen) {
+        lighting.g = min(lighting.g * 1.5, 1.0); // pojacava zelenu komponentu ali max 1.0
+    }
+
+    FragColor = lighting;
 }
 

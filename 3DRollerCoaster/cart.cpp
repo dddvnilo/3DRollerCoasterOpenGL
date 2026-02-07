@@ -10,7 +10,8 @@ Cart::Cart(
     unsigned int texID,
     unsigned int woodTexID,
     unsigned int plasticTexID,
-    std::vector<HumanoidModel>& seatedHumanoids
+    std::vector<HumanoidModel>& seatedHumanoids,
+    RideController* rideController
 ) : Model(""),
 path(path),
 width(width),
@@ -21,6 +22,7 @@ texID(texID),
 woodTexID(woodTexID),
 plasticTexID(plasticTexID),
 seatedHumanoids(seatedHumanoids),
+rideController(rideController),
 seatSize(                       // dimenzije sedista u odnosu na cart
     glm::vec3 (
     width * 0.15f,
@@ -352,7 +354,7 @@ void Cart::update()
 {
     if (!path) return;
 
-    if (!cartMoving)
+    if (rideController->getRideState() != RideState::ACTIVE && rideController->getRideState() != RideState::SOMEONE_SICK)
         t = 0.0f;
     else {
         glm::vec3 p = path->getPoint(t);
@@ -377,7 +379,7 @@ void Cart::update()
         t += speed;
         if (t > 1.0f) {
             t = 1.0f;
-            cartMoving = false;
+            rideController->rideEnded();
             speed = 0.0f;
         }
     }

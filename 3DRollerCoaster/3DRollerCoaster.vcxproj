@@ -146,6 +146,7 @@
     <ClCompile Include="ground.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="path.cpp" />
+    <ClCompile Include="ride_controller.cpp" />
     <ClCompile Include="rollercoaster.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
@@ -161,6 +162,8 @@
     <ClInclude Include="mesh.hpp" />
     <ClInclude Include="model.hpp" />
     <ClInclude Include="path.hpp" />
+    <ClInclude Include="ride_controller.hpp" />
+    <ClInclude Include="ride_state.hpp" />
     <ClInclude Include="rollercoaster.hpp" />
     <ClInclude Include="shader.hpp" />
     <ClInclude Include="stb_image.h" />

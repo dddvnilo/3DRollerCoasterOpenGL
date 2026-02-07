@@ -2,6 +2,7 @@
 #include "model.hpp"
 #include "path.hpp"
 #include "humanoid_model.hpp"
+#include "ride_controller.hpp"
 #include <glm/glm.hpp>
 
 class Cart : public Model {
@@ -15,14 +16,13 @@ public:
         unsigned int texID,
         unsigned int woodTexID,
         unsigned int plasticTexID,
-        std::vector<HumanoidModel>& seatedHumanoids
+        std::vector<HumanoidModel>& seatedHumanoids,
+        RideController* rideController
     );
 
     glm::mat4 getModelMatrix();
 
     void update();
-    // polja koja se koriste za kretanje - vrv ce biti refaktorisano odavde
-    bool cartMoving = false;  // da li kola idu
 private:
     // atributi kola
     Path* path;
@@ -34,6 +34,7 @@ private:
     unsigned int woodTexID;
     unsigned int plasticTexID;
     std::vector<HumanoidModel>& seatedHumanoids;
+    RideController* rideController;
 
     // atributi sedista (u odnosu na atribute cart-a ce se izracunati)
     glm::vec3 seatSize;

@@ -23,8 +23,13 @@
 #include "cart.hpp"
 #include "humanoid_model.hpp"
 
+#include "ride_controller.hpp"
+
 // modeli
 Cart* cart;
+
+// objekat za regulisanje voznje
+RideController* rideController;
 
 // teksture
 unsigned int groundTexture;
@@ -49,8 +54,20 @@ glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0); // at-vektor je inicijalno u 
 float movementSpeedMult = 0.04f;
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
-        cart->cartMoving = true;
+    if (action != GLFW_PRESS) return;
+
+    // na enter pocinje voznja
+    if (key == GLFW_KEY_ENTER) {
+        rideController->rideStarted();
+    }
+    // na space punimo cart putnicima
+    if (key == GLFW_KEY_SPACE) {
+        rideController->addPassanger();
+    }
+    // na tastere 1-8 "nesto radimo sa putnicima"
+    if (key >= GLFW_KEY_1 && key <= GLFW_KEY_8) {
+        int passengerIndex = key - GLFW_KEY_1;  // pretvara taster u broj 0..7
+        rideController->passangerInteraction(passengerIndex);
     }
 }
 
@@ -191,6 +208,9 @@ int main(void)
     seatedHumanoids.emplace_back("res/models/humanoid7/model.obj", 6); // sediste 6
     seatedHumanoids.emplace_back("res/models/humanoid8/luke dagobah.obj", 7); // sediste 7
 
+    // kontroler za voznju
+    rideController = new RideController(seatedHumanoids);
+
     // kreiranje ground-a: sirina=50, duzina=50, subdivisions=50, tekstura
     Ground ground(50.0f, 50.0f, 30, groundTexture);
     // kreiranje putanje (koriste je rollercoaster i cart)
@@ -220,7 +240,8 @@ int main(void)
         cartTexture,
         woodTexture,
         plasticTexture,
-        seatedHumanoids
+        seatedHumanoids,
+        rideController
     );
 
     glEnable(GL_DEPTH_TEST); // inicijalno ukljucivanje Z bafera (kasnije mozemo da iskljucujemo i opet ukljucujemo)
@@ -247,21 +268,21 @@ int main(void)
         }
 
         // testiranje dubine
-        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
         {
             glEnable(GL_DEPTH_TEST); // ukljucivanje testiranja Z bafera
         }
-        if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
         {
             glDisable(GL_DEPTH_TEST);
         }
 
         // (back)face culling
-        if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
         {
             glEnable(GL_CULL_FACE);
         }
-        if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
         {
             glDisable(GL_CULL_FACE);
         }
@@ -290,19 +311,27 @@ int main(void)
         basicShader.setMat4("uM", groundModel);
         view = glm::lookAt(cameraPos, cameraFront + cameraPos, cameraUp);
         basicShader.setMat4("uV", view);
+
         // crtanje ground-a
         ground.Draw(basicShader);
+
         // crtanje rolerkostera
         rollercoaster.Draw(basicShader);
+
         // crtanje cart-a
         cart->update();
         basicShader.setMat4("uM", cart->getModelMatrix());
         cart->Draw(basicShader);
+
         // crtanje ljudi
         for (HumanoidModel& humanoid : seatedHumanoids) {
+            if (!humanoid.isActive)
+                continue;
             basicShader.setMat4("uM", humanoid.modelMatrix);
+            basicShader.setBool("applyGreen", humanoid.isSick);
             humanoid.model.Draw(basicShader);
         }
+        basicShader.setBool("applyGreen", false);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
