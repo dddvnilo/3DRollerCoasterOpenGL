@@ -21,6 +21,7 @@
 #include "path.hpp"
 #include "rollercoaster.hpp"
 #include "cart.hpp"
+#include "humanoid_model.hpp"
 
 // modeli
 Cart* cart;
@@ -179,6 +180,16 @@ int main(void)
     glm::mat4 projectionP = glm::perspective(glm::radians(fov), aspect, 0.1f, 100.0f);
     basicShader.setMat4("uP", projectionP);
 
+    // ucitavanje modela ljudi
+    std::vector<HumanoidModel> seatedHumanoids;
+    seatedHumanoids.emplace_back("res/models/humanoid1/model.obj", 0); // sediste 0
+    seatedHumanoids.emplace_back("res/models/humanoid2/model.obj", 1); // sediste 1
+    seatedHumanoids.emplace_back("res/models/humanoid3/green swat.obj", 2); // sediste 2
+    seatedHumanoids.emplace_back("res/models/humanoid4/model.obj", 3); // sediste 3
+    seatedHumanoids.emplace_back("res/models/humanoid5/091_W_Aya_10K.obj", 4); // sediste 4
+    seatedHumanoids.emplace_back("res/models/humanoid6/Madara_Uchiha.obj", 5); // sediste 5
+
+
     // kreiranje ground-a: sirina=50, duzina=50, subdivisions=50, tekstura
     Ground ground(50.0f, 50.0f, 30, groundTexture);
     // kreiranje putanje (koriste je rollercoaster i cart)
@@ -207,11 +218,9 @@ int main(void)
         0.05f,  // wall thickness
         cartTexture,
         woodTexture,
-        plasticTexture
+        plasticTexture,
+        seatedHumanoids
     );
-
-    // ucitavanje modela ljudi
-    Model humanoid1("res/models/humanoid1/model.obj");
 
     glEnable(GL_DEPTH_TEST); // inicijalno ukljucivanje Z bafera (kasnije mozemo da iskljucujemo i opet ukljucujemo)
     glEnable(GL_CULL_FACE); // inicijalno ukljucivanje (back)face culling-a
@@ -284,12 +293,15 @@ int main(void)
         ground.Draw(basicShader);
         // crtanje rolerkostera
         rollercoaster.Draw(basicShader);
-        // crtanje coveka
-        humanoid1.Draw(basicShader);
         // crtanje cart-a
         cart->update();
         basicShader.setMat4("uM", cart->getModelMatrix());
         cart->Draw(basicShader);
+        // crtanje ljudi
+        for (HumanoidModel& humanoid : seatedHumanoids) {
+            basicShader.setMat4("uM", humanoid.modelMatrix);
+            humanoid.model.Draw(basicShader);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

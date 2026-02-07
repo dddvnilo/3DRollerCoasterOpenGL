@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="cart.hpp" />
     <ClInclude Include="ground.hpp" />
+    <ClInclude Include="humanoid_model.hpp" />
     <ClInclude Include="mesh.hpp" />
     <ClInclude Include="model.hpp" />
     <ClInclude Include="path.hpp" />

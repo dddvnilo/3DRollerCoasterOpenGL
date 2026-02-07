@@ -1,6 +1,7 @@
 #pragma once
 #include "model.hpp"
 #include "path.hpp"
+#include "humanoid_model.hpp"
 #include <glm/glm.hpp>
 
 class Cart : public Model {
@@ -13,7 +14,8 @@ public:
         float wallThickness,
         unsigned int texID,
         unsigned int woodTexID,
-        unsigned int plasticTexID
+        unsigned int plasticTexID,
+        std::vector<HumanoidModel>& seatedHumanoids
     );
 
     glm::mat4 getModelMatrix();
@@ -31,6 +33,7 @@ private:
     unsigned int texID;
     unsigned int woodTexID;
     unsigned int plasticTexID;
+    std::vector<HumanoidModel>& seatedHumanoids;
 
     // atributi sedista (u odnosu na atribute cart-a ce se izracunati)
     glm::vec3 seatSize;
@@ -48,4 +51,5 @@ private:
     void generateCart();
     void generateSeats();
     void generateCushions();
+    void updateHumanoids();
 };

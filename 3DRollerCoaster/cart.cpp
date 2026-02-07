@@ -1,4 +1,5 @@
 #include "cart.hpp"
+#include "humanoid_model.hpp"
 
 Cart::Cart(
     Path* path,
@@ -8,7 +9,8 @@ Cart::Cart(
     float wallThickness,
     unsigned int texID,
     unsigned int woodTexID,
-    unsigned int plasticTexID
+    unsigned int plasticTexID,
+    std::vector<HumanoidModel>& seatedHumanoids
 ) : Model(""),
 path(path),
 width(width),
@@ -18,6 +20,7 @@ wall(wallThickness),
 texID(texID),
 woodTexID(woodTexID),
 plasticTexID(plasticTexID),
+seatedHumanoids(seatedHumanoids),
 seatSize(                       // dimenzije sedista u odnosu na cart
     glm::vec3 (
     width * 0.15f,
@@ -400,4 +403,75 @@ void Cart::update()
 
     // update-ujemo model matricu: translacija prvo, pa rotacija
     modelMatrix = trans*rot;
+
+    updateHumanoids();
 }
+
+void Cart::updateHumanoids() {
+    if (seatedHumanoids.empty()) return;
+
+    // Pretpostavimo da imamo 4x2 raspored sedista (4 reda x 2 kolone)
+    int rows = 4;
+    int cols = 2;
+
+    float spacingX = width * 0.75f;  // razmak izmedju kolona
+    float spacingZ = depth * 0.45f;  // razmak izmedju redova
+    float seatY = -height + seatSize.y * 1.2f + (seatSize.y + cushionSize.y * 0.9f) * 1.1f;// +cushionSize.y; // visina sedista u lokalnom prostoru cart-a
+
+    for (HumanoidModel& humanoid : seatedHumanoids) {
+        int seatIndex = humanoid.seatIndex;
+
+        int row = seatIndex / cols;   // red sedista
+        int col = seatIndex % cols;   // kolona sedista
+
+        // flip red po Z-osi
+        /*
+        * ovo radimo da indeksi sedista ne bi bili:
+        * 1 3 5 7
+        * 0 2 4 6
+        * 
+        * vec:
+        * 7 5 3 1
+        * 6 4 2 0
+        */
+
+        row = (rows - 1) - row;
+
+        // lokalne koordinate sedista
+        float x = (col == 0 ? -1.f : 1.f) * spacingX * 0.5f;
+        float z = -depth * 0.6f + row * spacingZ;
+
+        glm::vec3 seatPosLocal(x, seatY, z);
+        glm::vec3 humanoidScale;
+        switch (seatIndex) {
+            case 0:
+                humanoidScale = glm::vec3(0.5f, 0.5f, 0.5f);
+                break;
+            case 1:
+                humanoidScale = glm::vec3(0.0015f, 0.0015f, 0.0015f);
+                break;
+            case 2:
+                humanoidScale = glm::vec3(0.005f, 0.005f, 0.005f);
+                break;
+            case 3:
+                humanoidScale = glm::vec3(0.5f, 0.5f, 0.5f);
+                break;
+            case 4:
+                humanoidScale = glm::vec3(0.0007f, 0.0007f, 0.0007f);
+                break;
+            case 5:
+                humanoidScale = glm::vec3(0.3f, 0.3f, 0.3f);
+                break;
+            default:
+                humanoidScale = glm::vec3(1.0f, 1.0f, 1.0f);
+        }
+
+        // sada kombinujemo sa transformacijom cart-a
+        glm::mat4 localTransform = glm::translate(glm::mat4(1.0f), seatPosLocal)
+                                    * glm::scale(glm::mat4(1.0f), humanoidScale);
+
+        // humanoid.modelMatrix je nova matica za crtanje
+        humanoid.modelMatrix = modelMatrix * localTransform;
+    }
+}
+

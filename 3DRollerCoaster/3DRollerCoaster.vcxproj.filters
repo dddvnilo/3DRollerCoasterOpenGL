@@ -48,6 +48,7 @@
     <ClInclude Include="path.hpp">
       <Filter>Source Files\RollerCoaster</Filter>
     </ClInclude>
+    <ClInclude Include="humanoid_model.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">

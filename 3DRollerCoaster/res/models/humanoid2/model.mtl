@@ -1,0 +1,19 @@
+# model.mtl
+
+# Materijal 1
+newmtl Material1
+Ka 1.000 1.000 1.000        # ambient color
+Kd 1.000 1.000 1.000        # diffuse color
+Ks 0.000 0.000 0.000        # specular color
+d 1.0                        # transparency (1 = opaque)
+illum 2                      # illumination model
+map_Kd texture2.png          # diffuse texture
+
+# Materijal 2
+newmtl Material2
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.000 0.000 0.000
+d 1.0
+illum 2
+map_Kd texture1.png
