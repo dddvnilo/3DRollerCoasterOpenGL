@@ -30,6 +30,7 @@ unsigned int groundTexture;
 unsigned int woodTexture;
 unsigned int metalTexture;
 unsigned int cartTexture;
+unsigned int plasticTexture;
 
 // prikaz
 float aspect;                   // aspect ratio
@@ -156,6 +157,7 @@ int main(void)
     woodTexture = preprocessTexture("res/wood.jpg");
     metalTexture = preprocessTexture("res/metal.jpg");
     cartTexture = metalTexture;
+    plasticTexture = preprocessTexture("res/plastic.jpg");
     
     glClearColor(0.53f, 0.81f, 0.92f, 1.0f); // nebo
     glCullFace(GL_BACK);// biranje lica koje ce se eliminisati (tek nakon sto ukljucimo Face Culling)
@@ -163,6 +165,7 @@ int main(void)
     basicShader.use();
     basicShader.setVec3("uLightPos", 10, 7, 3);
     basicShader.setVec3("uLightPos", 0, 1, -20);
+//    basicShader.setVec3("uLightPos", 0, 4, 5);
     basicShader.setVec3("uViewPos", 0, 0, 5);
     basicShader.setVec3("uLightColor", 1, 1, 1);
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
@@ -182,7 +185,7 @@ int main(void)
     Path path(
         40.0f,  // duzina
         3.0f,   // offset za deo puta za povratak unazad (po z osi koliko su delovi puta za napred i nazad udaljeni)
-        1.5f,   // pocetna visina
+        0.5f,   // pocetna visina
         4.0f,   // amplitude (za vrhove i doline)
         3      // broj brda
         );
@@ -202,7 +205,9 @@ int main(void)
         0.25f,   // height
         1.f,   // depth
         0.05f,  // wall thickness
-        cartTexture
+        cartTexture,
+        woodTexture,
+        plasticTexture
     );
 
     glEnable(GL_DEPTH_TEST); // inicijalno ukljucivanje Z bafera (kasnije mozemo da iskljucujemo i opet ukljucujemo)

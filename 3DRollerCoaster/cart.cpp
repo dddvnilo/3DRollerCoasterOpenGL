@@ -6,18 +6,36 @@ Cart::Cart(
     float height,
     float depth,
     float wallThickness,
-    unsigned int texID
+    unsigned int texID,
+    unsigned int woodTexID,
+    unsigned int plasticTexID
 ) : Model(""),
 path(path),
 width(width),
 height(height),
 depth(depth),
 wall(wallThickness),
-texID(texID)
+texID(texID),
+woodTexID(woodTexID),
+plasticTexID(plasticTexID),
+seatSize(                       // dimenzije sedista u odnosu na cart
+    glm::vec3 (
+    width * 0.15f,
+    height * 0.45f,
+    depth * 0.075f )
+),
+cushionSize(                    // dimenizije cushion-a u odnosu na sedista
+    glm::vec3 (
+    seatSize.x * 1.45f,
+    seatSize.y * 0.15f,
+    seatSize.z * 1.45f )
+)
 {
     meshes.clear();
     textures_loaded.clear();
     generateCart();
+    generateSeats();
+    generateCushions();
 }
 
 glm::mat4 Cart::getModelMatrix() {
@@ -129,9 +147,9 @@ void Cart::generateCart()
         { -ihw, -ihh + innerBottomOffset, -ihd }
     );
 
-    // ================= GORNJI SPOJ SPOLJA I UNUTRA =================
+    // ================= GORNJI SPOJ (onoga sto je) SPOLJA I UNUTRA =================
 
-    // BACK TOP
+    // back top
     addQuad(
         { hw,  hh, -hd },
         { -hw, hh, -hd },
@@ -139,7 +157,7 @@ void Cart::generateCart()
         { ihw,  ihh, -ihd }
     );
 
-    // LEFT TOP
+    // left top
     addQuad(
         { -hw,  hh, -hd },
         { -hw,  hh,  hd },
@@ -147,7 +165,7 @@ void Cart::generateCart()
         { -ihw, ihh, -ihd }
     );
 
-    // RIGHT TOP
+    // right top
     addQuad(
         { hw,  hh,  hd },
         { hw,  hh, -hd },
@@ -155,7 +173,7 @@ void Cart::generateCart()
         { ihw, ihh,  ihd }
     );
 
-    // FRONT TOP
+    // front top
     addQuad(
         { -hw,  hh,  hd },
         { hw,  hh,  hd },
@@ -166,6 +184,160 @@ void Cart::generateCart()
     std::vector<Texture> textures;
     Texture tex;
     tex.id = texID;
+    tex.type = "uDiffMap";
+    tex.path = "";
+    textures.push_back(tex);
+
+    meshes.push_back(Mesh(vertices, indices, textures));
+}
+
+void Cart::generateSeats()
+{
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    auto addBox = [&](glm::vec3 center, glm::vec3 halfSize)
+        {
+            glm::vec3 p[8] = {
+                center + glm::vec3(-halfSize.x, -halfSize.y, -halfSize.z),
+                center + glm::vec3(halfSize.x, -halfSize.y, -halfSize.z),
+                center + glm::vec3(halfSize.x,  halfSize.y, -halfSize.z),
+                center + glm::vec3(-halfSize.x,  halfSize.y, -halfSize.z),
+                center + glm::vec3(-halfSize.x, -halfSize.y,  halfSize.z),
+                center + glm::vec3(halfSize.x, -halfSize.y,  halfSize.z),
+                center + glm::vec3(halfSize.x,  halfSize.y,  halfSize.z),
+                center + glm::vec3(-halfSize.x,  halfSize.y,  halfSize.z),
+            };
+
+            unsigned int base = vertices.size();
+
+            auto quad = [&](int a, int b, int c, int d)
+                {
+                    glm::vec3 normal = glm::normalize(glm::cross(
+                        p[c] - p[a], p[b] - p[a]
+                    ));
+
+                    vertices.push_back({ p[a], normal, {0,0} });
+                    vertices.push_back({ p[b], normal, {1,0} });
+                    vertices.push_back({ p[c], normal, {1,1} });
+                    vertices.push_back({ p[d], normal, {0,1} });
+
+                    indices.insert(indices.end(), {
+                        base, base + 2, base + 1,
+                        base, base + 3, base + 2
+                        });
+
+                    base += 4;
+                };
+
+            quad(0, 1, 2, 3); // back
+            quad(5, 4, 7, 6); // front
+            quad(4, 0, 3, 7); // left
+            quad(1, 5, 6, 2); // right
+            quad(3, 2, 6, 7); // top
+            quad(4, 5, 1, 0); // bottom
+        };
+
+    float seatY = -height + seatSize.y * 1.2f;
+
+    float spacingX = width * 0.75f;
+    float spacingZ = depth * 0.45f;
+
+    // 4x2 matrica gornji red su neparni donji parni (u smislu 1,2,3, ..., 8)
+    for (int row = 0; row < 4; row++) {
+        for (int col = 0; col < 2; col++) {
+
+            float x = (col == 0 ? -1.f : 1.f) * spacingX * 0.5f;
+            float z = -depth * 0.6f + row * spacingZ;
+
+            addBox(
+                glm::vec3(x, seatY, z),
+                seatSize
+            );
+        }
+    }
+
+    std::vector<Texture> textures;
+    Texture tex;
+    tex.id = woodTexID;
+    tex.type = "uDiffMap";
+    tex.path = "";
+    textures.push_back(tex);
+
+    meshes.push_back(Mesh(vertices, indices, textures));
+}
+
+
+void Cart::generateCushions()
+{
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    auto addBox = [&](glm::vec3 center, glm::vec3 halfSize)
+        {
+            glm::vec3 p[8] = {
+                center + glm::vec3(-halfSize.x, -halfSize.y, -halfSize.z),
+                center + glm::vec3(halfSize.x, -halfSize.y, -halfSize.z),
+                center + glm::vec3(halfSize.x,  halfSize.y, -halfSize.z),
+                center + glm::vec3(-halfSize.x,  halfSize.y, -halfSize.z),
+                center + glm::vec3(-halfSize.x, -halfSize.y,  halfSize.z),
+                center + glm::vec3(halfSize.x, -halfSize.y,  halfSize.z),
+                center + glm::vec3(halfSize.x,  halfSize.y,  halfSize.z),
+                center + glm::vec3(-halfSize.x,  halfSize.y,  halfSize.z),
+            };
+
+            unsigned int base = vertices.size();
+
+            auto quad = [&](int a, int b, int c, int d)
+                {
+                    glm::vec3 normal = glm::normalize(glm::cross(
+                        p[c] - p[a], p[b] - p[a]
+                    ));
+
+                    vertices.push_back({ p[a], normal, {0,0} });
+                    vertices.push_back({ p[b], normal, {1,0} });
+                    vertices.push_back({ p[c], normal, {1,1} });
+                    vertices.push_back({ p[d], normal, {0,1} });
+
+                    indices.insert(indices.end(), {
+                        base, base + 2, base + 1,
+                        base, base + 3, base + 2
+                        });
+
+                    base += 4;
+                };
+
+            quad(0, 1, 2, 3); // back
+            quad(5, 4, 7, 6); // front
+            quad(4, 0, 3, 7); // left
+            quad(1, 5, 6, 2); // right
+            quad(3, 2, 6, 7); // top
+            quad(4, 5, 1, 0); // bottom
+        };
+
+    float seatY = -height + seatSize.y * 1.2f;
+    float cushionYOffset = seatSize.y + cushionSize.y * 0.9f;
+
+    float spacingX = width * 0.75f;
+    float spacingZ = depth * 0.45f;
+
+    // 4x2 matrica gornji red su neparni donji parni (u smislu 1,2,3, ..., 8)
+    for (int row = 0; row < 4; row++) {
+        for (int col = 0; col < 2; col++) {
+
+            float x = (col == 0 ? -1.f : 1.f) * spacingX * 0.5f;
+            float z = -depth * 0.6f + row * spacingZ;
+
+            addBox(
+                glm::vec3(x, seatY + cushionYOffset, z),
+                cushionSize
+            );
+        }
+    }
+
+    std::vector<Texture> textures;
+    Texture tex;
+    tex.id = plasticTexID;
     tex.type = "uDiffMap";
     tex.path = "";
     textures.push_back(tex);
@@ -222,7 +394,7 @@ void Cart::update()
     rot[3] = glm::vec4(0, 0, 0, 1);
 
     // translacija
-    float yCartOffset = height * 3.15;
+    float yCartOffset = height * 1.25;//3.15;
     p.y += yCartOffset;
     glm::mat4 trans = glm::translate(glm::mat4(1.0f), p);
 

@@ -11,7 +11,9 @@ public:
         float height,
         float depth,
         float wallThickness,
-        unsigned int texID
+        unsigned int texID,
+        unsigned int woodTexID,
+        unsigned int plasticTexID
     );
 
     glm::mat4 getModelMatrix();
@@ -27,6 +29,12 @@ private:
     float depth;
     float wall;
     unsigned int texID;
+    unsigned int woodTexID;
+    unsigned int plasticTexID;
+
+    // atributi sedista (u odnosu na atribute cart-a ce se izracunati)
+    glm::vec3 seatSize;
+    glm::vec3 cushionSize;
 
     // pomocne promenljive i konstante za kretanje kola
     float t = 0.0f;          // parametar po putanji 0 ... 1
@@ -38,4 +46,6 @@ private:
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     void generateCart();
+    void generateSeats();
+    void generateCushions();
 };
