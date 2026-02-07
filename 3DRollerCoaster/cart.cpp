@@ -462,6 +462,9 @@ void Cart::updateHumanoids() {
             case 5:
                 humanoidScale = glm::vec3(0.3f, 0.3f, 0.3f);
                 break;
+            case 6:
+                humanoidScale = glm::vec3(0.3f, 0.3f, 0.3f);
+                break;
             default:
                 humanoidScale = glm::vec3(1.0f, 1.0f, 1.0f);
         }
@@ -469,6 +472,12 @@ void Cart::updateHumanoids() {
         // sada kombinujemo sa transformacijom cart-a
         glm::mat4 localTransform = glm::translate(glm::mat4(1.0f), seatPosLocal)
                                     * glm::scale(glm::mat4(1.0f), humanoidScale);
+
+        // ovaj model treba dodatno rotirati
+        if (seatIndex == 6) {
+            localTransform = glm::rotate(localTransform, glm::radians(180.0f), glm::vec3(0, 1, 0));
+        }
+
 
         // humanoid.modelMatrix je nova matica za crtanje
         humanoid.modelMatrix = modelMatrix * localTransform;
