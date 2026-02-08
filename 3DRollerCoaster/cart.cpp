@@ -475,7 +475,7 @@ void Cart::updateHumanoids() {
     float spacingX = width * 0.75f;  // razmak izmedju kolona
     float spacingZ = depth * 0.45f;  // razmak izmedju redova
     float seatY = -height + seatSize.y * 1.2f + (seatSize.y + cushionSize.y * 0.9f) * 1.1f;// +cushionSize.y; // visina sedista u lokalnom prostoru cart-a
-    float desiredHumanoidHeight = height * 3.f;
+    float desiredHumanoidHeight = height * 4.f;
 
     for (HumanoidModel& humanoid : seatedHumanoids) {
         int seatIndex = humanoid.seatIndex;

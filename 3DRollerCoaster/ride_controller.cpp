@@ -24,6 +24,12 @@ void RideController::rideStarted() {
 	if (rideState != RideState::READY)
 		return;
 
+	for (HumanoidModel& h : seatedHumanoids) {
+		// ako imamo putnika u kolima koji se nije vezao ne desi se nista
+		if (h.isActive && !h.isBeltOn)
+			return;
+	}
+
 	rideState = RideState::ACTIVE;
 }
 
@@ -41,6 +47,11 @@ void RideController::someoneBecameSick(int seatIndex) {
 
 void RideController::rideEnded() {
 	rideState = numberOfPassangers != 0 ? RideState::DEPARTURE : RideState::READY;
+
+	// odvezati pojaseve na kraju voznje
+	for (HumanoidModel& h : seatedHumanoids) {
+		h.putBeltOff();
+	}
 }
 
 void RideController::passangerInteraction(int seatIndex) {
@@ -69,4 +80,12 @@ void RideController::passangerInteraction(int seatIndex) {
 		}
 	}
 	// ako su kola spremna za voznju - putnik se veze
+	if (rideState == RideState::READY) {
+		for (HumanoidModel& h : seatedHumanoids) {
+			if (h.seatIndex == seatIndex && h.isActive) {
+				h.putBeltOn();
+				break;
+			}
+		}
+	}
 }

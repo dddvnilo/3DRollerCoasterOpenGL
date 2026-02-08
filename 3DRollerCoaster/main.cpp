@@ -53,6 +53,130 @@ float yaw = -90.0f, pitch = 0.0f; // yaw -90: kamera gleda u pravcu z ose; pitch
 glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0); // at-vektor je inicijalno u pravcu z ose
 float movementSpeedMult = 0.04f;
 
+void drawSeatBelt(HumanoidModel& humanoid, Shader& shader, unsigned int beltTexture)
+{
+    if (!humanoid.isActive) return;
+
+    // dobijanje granica modela
+    glm::vec3 minV = humanoid.model.getMinVertex();
+    glm::vec3 maxV = humanoid.model.getMaxVertex();
+
+    // pozicija struka i dimenzije trake
+    float beltHeight = (minV.y + maxV.y) / 2.0f;     // y sredina tela (struk kao)
+    float beltThickness = (maxV.y - minV.y) * 0.05f;
+    float outerWidth = (maxV.x - minV.x) * 0.6;
+    float outerDepth = (maxV.z - minV.z) * 0.9;
+    float innerWidth = outerWidth * 0.7f;
+    float innerDepth = outerDepth * 0.7f;
+
+    glm::vec3 center(0, beltHeight, 0);
+
+    glm::vec3 halfOuter(outerWidth / 2, beltThickness / 2, outerDepth / 2);
+    glm::vec3 halfInner(innerWidth / 2, beltThickness / 2, innerDepth / 2);
+
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    auto addQuad = [&](const glm::vec3& v0,
+        const glm::vec3& v1,
+        const glm::vec3& v2,
+        const glm::vec3& v3)
+        {
+            glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+            unsigned int base = vertices.size();
+            vertices.push_back({ v0, normal, {0,0} });
+            vertices.push_back({ v1, normal, {1,0} });
+            vertices.push_back({ v2, normal, {1,1} });
+            vertices.push_back({ v3, normal, {0,1} });
+            indices.insert(indices.end(), { base, base + 2, base + 3, base, base + 1, base + 2 });
+        };
+
+    // spoljasnje stranice
+    addQuad(center + glm::vec3(-halfOuter.x, -halfOuter.y, halfOuter.z),
+        center + glm::vec3(halfOuter.x, -halfOuter.y, halfOuter.z),
+        center + glm::vec3(halfOuter.x, halfOuter.y, halfOuter.z),
+        center + glm::vec3(-halfOuter.x, halfOuter.y, halfOuter.z)); // front
+    addQuad(center + glm::vec3(halfOuter.x, -halfOuter.y, -halfOuter.z),
+        center + glm::vec3(-halfOuter.x, -halfOuter.y, -halfOuter.z),
+        center + glm::vec3(-halfOuter.x, halfOuter.y, -halfOuter.z),
+        center + glm::vec3(halfOuter.x, halfOuter.y, -halfOuter.z)); // back
+    addQuad(center + glm::vec3(-halfOuter.x, -halfOuter.y, -halfOuter.z),
+        center + glm::vec3(-halfOuter.x, -halfOuter.y, halfOuter.z),
+        center + glm::vec3(-halfOuter.x, halfOuter.y, halfOuter.z),
+        center + glm::vec3(-halfOuter.x, halfOuter.y, -halfOuter.z)); // left
+    addQuad(center + glm::vec3(halfOuter.x, -halfOuter.y, halfOuter.z),
+        center + glm::vec3(halfOuter.x, -halfOuter.y, -halfOuter.z),
+        center + glm::vec3(halfOuter.x, halfOuter.y, -halfOuter.z),
+        center + glm::vec3(halfOuter.x, halfOuter.y, halfOuter.z)); // right
+
+    // unutrasnje stranice
+    addQuad(center + glm::vec3(-halfInner.x, -halfInner.y, halfInner.z),
+        center + glm::vec3(-halfInner.x, halfInner.y, halfInner.z),
+        center + glm::vec3(halfInner.x, halfInner.y, halfInner.z),
+        center + glm::vec3(halfInner.x, -halfInner.y, halfInner.z)); // front
+    addQuad(center + glm::vec3(halfInner.x, -halfInner.y, -halfInner.z),
+        center + glm::vec3(halfInner.x, halfInner.y, -halfInner.z),
+        center + glm::vec3(-halfInner.x, halfInner.y, -halfInner.z),
+        center + glm::vec3(-halfInner.x, -halfInner.y, -halfInner.z)); // back
+    addQuad(center + glm::vec3(-halfInner.x, -halfInner.y, -halfInner.z),
+        center + glm::vec3(-halfInner.x, halfInner.y, -halfInner.z),
+        center + glm::vec3(-halfInner.x, halfInner.y, halfInner.z),
+        center + glm::vec3(-halfInner.x, -halfInner.y, halfInner.z)); // left
+    addQuad(center + glm::vec3(halfInner.x, -halfInner.y, halfInner.z),
+        center + glm::vec3(halfInner.x, halfInner.y, halfInner.z),
+        center + glm::vec3(halfInner.x, halfInner.y, -halfInner.z),
+        center + glm::vec3(halfInner.x, -halfInner.y, -halfInner.z)); // right
+
+
+    // gornje stranice (spajaju spoljasnje i unutrasnje)
+    addQuad(center + glm::vec3(-halfOuter.x, halfOuter.y, halfOuter.z),
+        center + glm::vec3(halfOuter.x, halfOuter.y, halfOuter.z),
+        center + glm::vec3(halfInner.x, halfOuter.y, halfInner.z),
+        center + glm::vec3(-halfInner.x, halfOuter.y, halfInner.z)); // front
+    addQuad(center + glm::vec3(halfOuter.x, halfOuter.y, -halfOuter.z),
+        center + glm::vec3(-halfOuter.x, halfOuter.y, -halfOuter.z),
+        center + glm::vec3(-halfInner.x, halfOuter.y, -halfInner.z),
+        center + glm::vec3(halfInner.x, halfOuter.y, -halfInner.z)); // back
+    addQuad(center + glm::vec3(-halfOuter.x, halfOuter.y, -halfOuter.z),
+        center + glm::vec3(-halfOuter.x, halfOuter.y, halfOuter.z),
+        center + glm::vec3(-halfInner.x, halfOuter.y, halfInner.z),
+        center + glm::vec3(-halfInner.x, halfOuter.y, -halfInner.z)); // left
+    addQuad(center + glm::vec3(halfOuter.x, halfOuter.y, halfOuter.z),
+        center + glm::vec3(halfOuter.x, halfOuter.y, -halfOuter.z),
+        center + glm::vec3(halfInner.x, halfOuter.y, -halfInner.z),
+        center + glm::vec3(halfInner.x, halfOuter.y, halfInner.z)); // right
+
+    // donje stranice (spajaju spoljasnje i unutrasnje)
+    addQuad(center + glm::vec3(-halfOuter.x, -halfOuter.y, halfOuter.z),
+        center + glm::vec3(-halfInner.x, -halfOuter.y, halfInner.z),
+        center + glm::vec3(halfInner.x, -halfOuter.y, halfInner.z),
+        center + glm::vec3(halfOuter.x, -halfOuter.y, halfOuter.z)); // front
+    addQuad(center + glm::vec3(halfOuter.x, -halfOuter.y, -halfOuter.z),
+        center + glm::vec3(halfInner.x, -halfOuter.y, -halfInner.z),
+        center + glm::vec3(-halfInner.x, -halfOuter.y, -halfInner.z),
+        center + glm::vec3(-halfOuter.x, -halfOuter.y, -halfOuter.z)); // back
+    addQuad(center + glm::vec3(-halfOuter.x, -halfOuter.y, -halfOuter.z),
+        center + glm::vec3(-halfInner.x, -halfOuter.y, -halfInner.z),
+        center + glm::vec3(-halfInner.x, -halfOuter.y, halfInner.z),
+        center + glm::vec3(-halfOuter.x, -halfOuter.y, halfOuter.z)); // left
+    addQuad(center + glm::vec3(halfOuter.x, -halfOuter.y, halfOuter.z),
+        center + glm::vec3(halfInner.x, -halfOuter.y, halfInner.z),
+        center + glm::vec3(halfInner.x, -halfOuter.y, -halfInner.z),
+        center + glm::vec3(halfOuter.x, -halfOuter.y, -halfOuter.z)); // right
+
+    // tekstura
+    std::vector<Texture> textures;
+    Texture tex; tex.id = beltTexture; tex.type = "uDiffMap"; tex.path = "";
+    textures.push_back(tex);
+
+    Mesh belt(vertices, indices, textures);
+
+    shader.setMat4("uM", humanoid.modelMatrix);
+    belt.Draw(shader);
+}
+
+
+
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action != GLFW_PRESS) return;
 
@@ -332,6 +456,9 @@ int main(void)
             basicShader.setMat4("uM", humanoid.modelMatrix);
             basicShader.setBool("applyGreen", humanoid.isSick);
             humanoid.model.Draw(basicShader);
+            // crtanje pojaseva
+            if (humanoid.isBeltOn)
+                drawSeatBelt(humanoid, basicShader, plasticTexture);
         }
         basicShader.setBool("applyGreen", false);
 
