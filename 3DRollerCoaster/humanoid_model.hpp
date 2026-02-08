@@ -11,10 +11,12 @@ struct HumanoidModel {
     int seatIndex;
     bool isActive;
     bool isSick;
+    float modelHeight;
     glm::mat4 modelMatrix;
 
     HumanoidModel(const std::string& path, int seat)
         : model(path), seatIndex(seat), isActive(false), isSick(false), modelMatrix(1.0f) {
+        modelHeight = model.getHeight();
     }
 
     void sitDown() {

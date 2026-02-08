@@ -475,6 +475,7 @@ void Cart::updateHumanoids() {
     float spacingX = width * 0.75f;  // razmak izmedju kolona
     float spacingZ = depth * 0.45f;  // razmak izmedju redova
     float seatY = -height + seatSize.y * 1.2f + (seatSize.y + cushionSize.y * 0.9f) * 1.1f;// +cushionSize.y; // visina sedista u lokalnom prostoru cart-a
+    float desiredHumanoidHeight = height * 3.f;
 
     for (HumanoidModel& humanoid : seatedHumanoids) {
         int seatIndex = humanoid.seatIndex;
@@ -492,7 +493,6 @@ void Cart::updateHumanoids() {
         * 7 5 3 1
         * 6 4 2 0
         */
-
         row = (rows - 1) - row;
 
         // lokalne koordinate sedista
@@ -500,35 +500,9 @@ void Cart::updateHumanoids() {
         float z = -depth * 0.6f + row * spacingZ;
 
         glm::vec3 seatPosLocal(x, seatY, z);
-        glm::vec3 humanoidScale;
-        switch (seatIndex) {
-            case 0:
-                humanoidScale = glm::vec3(0.5f, 0.5f, 0.5f);
-                break;
-            case 1:
-                humanoidScale = glm::vec3(0.0015f, 0.0015f, 0.0015f);
-                break;
-            case 2:
-                humanoidScale = glm::vec3(0.005f, 0.005f, 0.005f);
-                break;
-            case 3:
-                humanoidScale = glm::vec3(0.5f, 0.5f, 0.5f);
-                break;
-            case 4:
-                humanoidScale = glm::vec3(0.0007f, 0.0007f, 0.0007f);
-                break;
-            case 5:
-                humanoidScale = glm::vec3(0.3f, 0.3f, 0.3f);
-                break;
-            case 6:
-                humanoidScale = glm::vec3(0.3f, 0.3f, 0.3f);
-                break;
-            case 7:
-                humanoidScale = glm::vec3(0.05f, 0.05f, 0.05f);
-                break;
-            default:
-                humanoidScale = glm::vec3(1.0f, 1.0f, 1.0f);
-        }
+
+        float scaleFactor = desiredHumanoidHeight / humanoid.model.getHeight();
+        glm::vec3 humanoidScale(scaleFactor);
 
         // sada kombinujemo sa transformacijom cart-a
         glm::mat4 localTransform = glm::translate(glm::mat4(1.0f), seatPosLocal)

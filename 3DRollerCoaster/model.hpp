@@ -34,10 +34,16 @@ public:
     string directory;
     bool gammaCorrection;
 
+    glm::vec3 minVertex;
+    glm::vec3 maxVertex;
+
     // constructor, expects a filepath to a 3D model.
     Model(string const& path, bool gamma = false) : gammaCorrection(gamma)
     {
         loadModel(path);
+        minVertex = glm::vec3(FLT_MAX);
+        maxVertex = glm::vec3(-FLT_MAX);
+        calculateBoundingBox();
     }
 
     // draws the model, and thus all its meshes
@@ -46,6 +52,11 @@ public:
         for (unsigned int i = 0; i < meshes.size(); i++)
             meshes[i].Draw(shader);
     }
+
+
+    glm::vec3 getMinVertex() const { return minVertex; }
+    glm::vec3 getMaxVertex() const { return maxVertex; }
+    float getHeight() const { return maxVertex.y - minVertex.y; }
 
 private:
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
@@ -183,6 +194,23 @@ private:
             }
         }
         return textures;
+    }
+
+    void calculateBoundingBox()
+    {
+        for (const Mesh& mesh : meshes)
+        {
+            for (const Vertex& v : mesh.vertices)
+            {
+                minVertex.x = std::min(minVertex.x, v.Position.x);
+                minVertex.y = std::min(minVertex.y, v.Position.y);
+                minVertex.z = std::min(minVertex.z, v.Position.z);
+
+                maxVertex.x = std::max(maxVertex.x, v.Position.x);
+                maxVertex.y = std::max(maxVertex.y, v.Position.y);
+                maxVertex.z = std::max(maxVertex.z, v.Position.z);
+            }
+        }
     }
 };
 
