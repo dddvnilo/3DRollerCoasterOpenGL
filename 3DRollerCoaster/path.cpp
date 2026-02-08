@@ -7,14 +7,16 @@ Path::Path(
     float returnOffsetZ,
     float baseHeight,
     float amplitude,
-    int hills
+    int hills,
+    glm::vec3 origin = glm::vec3(0.0f)
 )
     : length(length),
     returnOffsetZ(returnOffsetZ),
     turnRadius(returnOffsetZ * 0.5f),
     baseHeight(baseHeight),
     amplitude(amplitude),
-    hills(hills)
+    hills(hills),
+    origin(origin)
 {
 }
 
@@ -65,7 +67,7 @@ glm::vec3 Path::forwardTrack(float t) const
                 sin(2.0f * hills * glm::pi<float>() * t2 - glm::half_pi<float>()));
     }
 
-    return glm::vec3(x, y, 0.0f);
+    return origin + glm::vec3(x, y, 0.0f);
 }
 
 glm::vec3 Path::turnTrack(float t) const
@@ -76,7 +78,7 @@ glm::vec3 Path::turnTrack(float t) const
     float z = turnRadius * (1.0f - cos(angle));
     float y = baseHeight;
 
-    return glm::vec3(x, y, z);
+    return origin + glm::vec3(x, y, z);
 }
 
 glm::vec3 Path::returnTrack(float t) const
@@ -85,7 +87,7 @@ glm::vec3 Path::returnTrack(float t) const
     float y = baseHeight;
     float z = returnOffsetZ;
 
-    return glm::vec3(x, y, z);
+    return origin + glm::vec3(x, y, z);
 }
 
 glm::vec3 Path::turnTrackBack(float t) const
@@ -96,5 +98,5 @@ glm::vec3 Path::turnTrackBack(float t) const
     float z = returnOffsetZ - turnRadius * (1.0f - cos(angle));
     float y = baseHeight;
 
-    return glm::vec3(x, y, z);
+    return origin + glm::vec3(x, y, z);
 }

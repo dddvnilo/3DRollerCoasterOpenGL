@@ -12,6 +12,7 @@ uniform vec3 uLightColor;
 uniform sampler2D uDiffMap1;
 
 uniform bool applyGreen;
+uniform bool greenFilterOn;
 
 void main()
 {    
@@ -38,7 +39,21 @@ void main()
     if (applyGreen) {
         lighting.g = min(lighting.g * 1.5, 1.0); // pojacava zelenu komponentu ali max 1.0
     }
+    
+    // zelena nijansa za pojedinacne modele
+    if (applyGreen) {
+        lighting.g = min(lighting.g * 1.5, 1.0);
+    }
 
     FragColor = lighting;
+
+    // filter preko cele scene
+    if (greenFilterOn) {
+        FragColor.rgb = vec3(
+            FragColor.r * 0.5,
+            min(FragColor.g * 1.5, 1.0),
+            FragColor.b * 0.5
+        );
+    }
 }
 

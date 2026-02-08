@@ -8,7 +8,8 @@ public:
         float returnOffsetZ,
         float baseHeight,
         float amplitude,
-        int hills
+        int hills,
+        glm::vec3 origin
     );
 
     // api koji ce da koriste rollercoaster i cart (vrv i seats i ljudi i pojasevi)
@@ -22,6 +23,7 @@ private:
     float baseHeight;
     float amplitude;
     int hills;
+    glm::vec3 origin;
 
     glm::vec3 forwardTrack(float t) const;
     glm::vec3 turnTrack(float t) const;

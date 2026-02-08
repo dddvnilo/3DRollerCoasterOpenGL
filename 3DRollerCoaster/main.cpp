@@ -7,7 +7,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-//GLM biblioteke
+// GLM biblioteke
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -52,6 +52,7 @@ float lastX, lastY = 500.0f; // Ekran nam je 1000 x 1000 piksela, kursor je inic
 float yaw = -90.0f, pitch = 0.0f; // yaw -90: kamera gleda u pravcu z ose; pitch = 0: kamera gleda vodoravno
 glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0); // at-vektor je inicijalno u pravcu z ose
 float movementSpeedMult = 0.04f;
+bool toggleFpCamera = true;
 
 void drawSeatBelt(HumanoidModel& humanoid, Shader& shader, unsigned int beltTexture)
 {
@@ -127,7 +128,6 @@ void drawSeatBelt(HumanoidModel& humanoid, Shader& shader, unsigned int beltText
         center + glm::vec3(halfInner.x, halfInner.y, -halfInner.z),
         center + glm::vec3(halfInner.x, -halfInner.y, -halfInner.z)); // right
 
-
     // gornje stranice (spajaju spoljasnje i unutrasnje)
     addQuad(center + glm::vec3(-halfOuter.x, halfOuter.y, halfOuter.z),
         center + glm::vec3(halfOuter.x, halfOuter.y, halfOuter.z),
@@ -192,6 +192,10 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     if (key >= GLFW_KEY_1 && key <= GLFW_KEY_8) {
         int passengerIndex = key - GLFW_KEY_1;  // pretvara taster u broj 0..7
         rideController->passangerInteraction(passengerIndex);
+    }
+    // toggle za kameru perspektive prvog putnika
+    if (key == GLFW_KEY_C) {
+        toggleFpCamera = !toggleFpCamera;
     }
 }
 
@@ -306,13 +310,13 @@ int main(void)
 
     basicShader.use();
     basicShader.setVec3("uLightPos", 10, 7, 3);
-    basicShader.setVec3("uLightPos", 0, 1, -20);
+    basicShader.setVec3("uLightPos", -20, 3, -20);
     // basicShader.setVec3("uLightPos", 0, 4, 5);
     basicShader.setVec3("uViewPos", 0, 0, 5);
     basicShader.setVec3("uLightColor", 1, 1, 1);
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
     basicShader.setMat4("uP", projection);
-    glm::vec3 cameraPos = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 cameraPos = glm::vec3(0.0f, 1.0f, 10.0f);
     glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0);
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront ,cameraUp);
     basicShader.setMat4("uV", view);
@@ -336,21 +340,24 @@ int main(void)
     rideController = new RideController(seatedHumanoids);
 
     // kreiranje ground-a: sirina=50, duzina=50, subdivisions=50, tekstura
-    Ground ground(50.0f, 50.0f, 30, groundTexture);
+    Ground ground(100.0f, 100.0f, 75, groundTexture);
+
+    glm::vec3 origin = glm::vec3(-20, 0, 0);
     // kreiranje putanje (koriste je rollercoaster i cart)
     Path path(
         40.0f,  // duzina
         3.0f,   // offset za deo puta za povratak unazad (po z osi koliko su delovi puta za napred i nazad udaljeni)
-        0.5f,   // pocetna visina
+        1.0f,   // pocetna visina
         4.0f,   // amplitude (za vrhove i doline)
-        3      // broj brda
+        3,      // broj brda
+        origin
         );
     // kreiranje rolerkostera
     RollerCoaster rollercoaster(
-        &path,  // putanja
-        1.2f,   // sirina sina
+        &path, // putanja
+        1.2f,  // sirina sina
         0.2f,  // debljina samog rail-a
-        5000,   // rezolucija
+        5000,  // rezolucija
         metalTexture,
         woodTexture
     );
@@ -358,8 +365,8 @@ int main(void)
     cart = new Cart(
         &path,  // putanja
         0.5f,   // width
-        0.25f,   // height
-        1.f,   // depth
+        0.25f,  // height
+        1.f,    // depth
         0.05f,  // wall thickness
         cartTexture,
         woodTexture,
@@ -429,13 +436,44 @@ int main(void)
             cameraPos -= movementSpeedMult * glm::normalize(glm::vec3(cameraFront.x, 0, cameraFront.z));
         }
 
-        // ======= ISCRTAVANJE MODELA ========
         basicShader.use();
         glm::mat4 groundModel = glm::mat4(1.0f);
         basicShader.setMat4("uM", groundModel);
         view = glm::lookAt(cameraPos, cameraFront + cameraPos, cameraUp);
         basicShader.setMat4("uV", view);
 
+        HumanoidModel& fpHumanoid = seatedHumanoids[0];
+        glm::vec3 fpCameraPos;
+        glm::vec3 fpCameraFront;
+
+        if (fpHumanoid.isActive && toggleFpCamera) {
+            float headHeight = 1.9f; // visina glave (recimo kao)
+
+            // forward vektor humanoida iz model matrix
+            glm::vec3 humanoidForward = glm::normalize(glm::vec3(fpHumanoid.modelMatrix * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
+
+            // kamera je malo ispred glave (headHeight + cameraOffset)
+            const float cameraOffset = 0.3f; // koliko je kamera ispred glave
+            fpCameraPos = glm::vec3(fpHumanoid.modelMatrix * glm::vec4(0.0f, headHeight, 0.0f, 1.0f)) + humanoidForward * cameraOffset;
+
+            // pravljenje front vektora kamere iz yaw/pitch
+            fpCameraFront.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+            fpCameraFront.y = sin(glm::radians(pitch));
+            fpCameraFront.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+            fpCameraFront = glm::normalize(fpCameraFront);
+        }
+        else {
+            // free camera
+            fpCameraPos = cameraPos;
+            fpCameraFront = cameraFront;
+        }
+
+        basicShader.setBool("greenFilterOn", seatedHumanoids[0].isSick);
+
+        view = glm::lookAt(fpCameraPos, fpCameraPos + fpCameraFront, cameraUp);
+        basicShader.setMat4("uV", view);
+
+        // ======= ISCRTAVANJE MODELA ========
         // crtanje ground-a
         ground.Draw(basicShader);
 
