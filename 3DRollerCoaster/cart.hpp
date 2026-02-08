@@ -23,6 +23,7 @@ public:
     glm::mat4 getModelMatrix();
 
     void update();
+    void setDeltaTime(float dt);
 private:
     // atributi kola
     Path* path;
@@ -43,9 +44,16 @@ private:
     // pomocne promenljive i konstante za kretanje kola
     float t = 0.0f;          // parametar po putanji 0 ... 1
     float speed = 0.0f;      // koliko t ide po sekundi
-    const float TOP_SPEED = 0.00006f;    // maksimalna brzina ravnog dela
+    const float TOP_SPEED = 0.0008f;    // maksimalna brzina ravnog dela
+    const float RETURN_SPEED = 0.0005f;
     const float ACCELERATION = 0.000025f; // koliko kola ubrzavaju po update-u
     const float DECELERATION = 1.04; // neki multiplier za usporenje da bi lepse izgledalo
+    const float STOPPING_DECELERATION = 0.85f;
+    float stopTimer = 0.0f;
+    float deltaTime = 0.0f;
+    bool isStopping = false;
+    bool isStopped = false;
+    bool isReturning = false;
 
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 

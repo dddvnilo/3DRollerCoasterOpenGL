@@ -319,6 +319,8 @@ int main(void)
         rollercoaster.Draw(basicShader);
 
         // crtanje cart-a
+        float deltaTime = static_cast<float>(timePassed);
+        cart->setDeltaTime(deltaTime);
         cart->update();
         basicShader.setMat4("uM", cart->getModelMatrix());
         cart->Draw(basicShader);

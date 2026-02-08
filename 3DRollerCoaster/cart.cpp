@@ -47,6 +47,10 @@ glm::mat4 Cart::getModelMatrix() {
     return modelMatrix;
 }
 
+void Cart::setDeltaTime(float dt) {
+    deltaTime = dt;
+}
+
 void Cart::generateCart()
 {
     if (!path) return;
@@ -354,33 +358,85 @@ void Cart::update()
 {
     if (!path) return;
 
-    if (rideController->getRideState() != RideState::ACTIVE && rideController->getRideState() != RideState::SOMEONE_SICK)
+    if (rideController->getRideState() != RideState::ACTIVE &&
+        rideController->getRideState() != RideState::SOMEONE_SICK &&
+        !isReturning && !isStopped && !isStopping)
+    {
         t = 0.0f;
+    }
     else {
-        glm::vec3 p = path->getPoint(t);
-        glm::vec3 nextP = path->getPoint(std::min(t + 0.001f, 1.0f));   // mali korak za nagib
-        float dy = nextP.y - p.y;                                       // razlika visine
+        // update kad je normalna voznja
+        if (rideController->getRideState() == RideState::ACTIVE &&
+            !isStopping && !isStopped && !isReturning) {
+            glm::vec3 p = path->getPoint(t);
+            glm::vec3 nextP = path->getPoint(std::min(t + 0.001f, 1.0f));   // mali korak za nagib
+            float dy = nextP.y - p.y;                                       // razlika visine
 
-        if (dy > 0.0f) {                        // uzbrdo
-            speed /= DECELERATION;              // usporava
-            if (speed <= ACCELERATION * 2.f)    // da ne bude presporo
-                speed = ACCELERATION * 2.f;
-        }
-        if (dy < 0.0f) {
-            speed += ACCELERATION;
-        }
-        if (dy == 0.0f) {
-            speed += ACCELERATION;
-            if (speed >= TOP_SPEED)             // na ravnom postoji granica za ubrzanje
-                speed == TOP_SPEED;
-        }
+            if (dy > 0.0f) {                        // uzbrdo
+                speed /= DECELERATION;              // usporava
+                if (speed <= ACCELERATION * 2.f)    // da ne bude presporo
+                    speed = ACCELERATION * 2.f;
+            }
+            if (dy < 0.0f) {
+                speed += ACCELERATION;
+            }
+            if (dy == 0.0f) {
+                speed += ACCELERATION;
+                if (speed >= TOP_SPEED)             // na ravnom postoji granica za ubrzanje
+                    speed = TOP_SPEED;
+            }
 
-        // update po transliranoj koordinati kola
-        t += speed;
-        if (t > 1.0f) {
-            t = 1.0f;
-            rideController->rideEnded();
-            speed = 0.0f;
+            // update po transliranoj koordinati kola
+            t += speed;
+            if (t > 1.0f) {
+                t = 1.0f;
+                rideController->rideEnded();
+                speed = 0.0f;
+            }
+        }
+        if (rideController->getRideState() == RideState::SOMEONE_SICK &&
+            !isStopping && !isStopped && !isReturning)
+        {
+            isStopping = true;
+        }
+        if (isStopping && !isStopped) {
+            speed *= STOPPING_DECELERATION; // usporava
+            t += speed;
+            if (speed <= 0.000000001f) {    // kad speed postane dovoljno malo kola stanu
+                speed = 0.0f;
+                isStopped = true;
+                stopTimer = 0.0f;
+            }
+        }
+        if (isStopped) {
+            stopTimer += deltaTime;
+
+            if (stopTimer >= 10.0f) {
+                isStopped = false;
+                isStopping = false;
+                isReturning = true;
+                speed = RETURN_SPEED;
+            }
+        }
+        if (isReturning) {
+            if (t < 0.5) {
+                t -= speed;
+
+                if (t <= 0.0f) {
+                    t = 0.0f;
+                    isReturning = false;
+                    rideController->rideEnded();
+                }
+            }
+            if (t >= 0.5) {
+                t += speed;
+
+                if (t >= 1.0f) {
+                    t = 1.0f;
+                    isReturning = false;
+                    rideController->rideEnded();
+                }
+            }
         }
     }
 
