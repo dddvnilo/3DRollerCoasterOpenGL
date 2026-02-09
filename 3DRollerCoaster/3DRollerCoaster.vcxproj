@@ -154,6 +154,8 @@
     <None Include="basic.frag" />
     <None Include="basic.vert" />
     <None Include="packages.config" />
+    <None Include="signature.frag" />
+    <None Include="signature.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cart.hpp" />

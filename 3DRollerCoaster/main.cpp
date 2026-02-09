@@ -37,6 +37,7 @@ unsigned int woodTexture;
 unsigned int metalTexture;
 unsigned int cartTexture;
 unsigned int plasticTexture;
+unsigned int signatureTexture;
 
 // prikaz
 float aspect;                   // aspect ratio
@@ -46,6 +47,14 @@ const double FRAME_TIME = 1.0 / TARGET_FPS;
 float fov = 45.0f;
 double lastFrameTime = glfwGetTime();
 
+// za toggle testiranja dubine i odstranjivanja nalicja
+bool depthTestEnabled = true;
+bool cullFaceEnabled = true;
+
+// promenljive za nebo
+glm::vec3 skyNormal = { 0.53f, 0.81f, 0.92f };
+glm::vec3 skySick = { 0.45f, 0.75f, 0.45f };
+
 // look around
 bool firstMouse = true;
 float lastX, lastY = 500.0f; // Ekran nam je 1000 x 1000 piksela, kursor je inicijalno na sredini
@@ -53,6 +62,10 @@ float yaw = -90.0f, pitch = 0.0f; // yaw -90: kamera gleda u pravcu z ose; pitch
 glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0); // at-vektor je inicijalno u pravcu z ose
 float movementSpeedMult = 0.04f;
 bool toggleFpCamera = true;
+
+// potpis
+const float SIGNATURE_ASPECT = 1275.0f / 164.0f;
+float signatureScale = 0.06f; // faktor skaliranja dimenzija potpisa
 
 void drawSeatBelt(HumanoidModel& humanoid, Shader& shader, unsigned int beltTexture)
 {
@@ -175,8 +188,6 @@ void drawSeatBelt(HumanoidModel& humanoid, Shader& shader, unsigned int beltText
     belt.Draw(shader);
 }
 
-
-
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action != GLFW_PRESS) return;
 
@@ -197,6 +208,16 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     if (key == GLFW_KEY_C) {
         toggleFpCamera = !toggleFpCamera;
     }
+    // toggle za depth test
+    if (key == GLFW_KEY_U)
+        depthTestEnabled = true;
+    if (key == GLFW_KEY_I)
+        depthTestEnabled = false;
+    // toggle za (back)face culling
+    if (key == GLFW_KEY_O)
+        cullFaceEnabled = true;
+    if (key == GLFW_KEY_P)
+        cullFaceEnabled = false;
 }
 
 unsigned int preprocessTexture(const char* filepath) {
@@ -296,7 +317,10 @@ int main(void)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
+    unsigned int signatureVAO, signatureVBO, signatureEBO;
+
     Shader basicShader("basic.vert", "basic.frag");
+    Shader signatureShader("signature.vert", "signature.frag");
 
     // ucitavanje tekstura
     groundTexture = preprocessTexture("res/grass.jpg");
@@ -304,6 +328,40 @@ int main(void)
     metalTexture = preprocessTexture("res/metal.jpg");
     cartTexture = metalTexture;
     plasticTexture = preprocessTexture("res/plastic.jpg");
+    signatureTexture = preprocessTexture("res/potpis.png");
+
+    float quadVertices[] = {
+         0.0f, 1.0f, 0.0f,    0.0f, 1.0f,
+         1.0f, 1.0f, 0.0f,    1.0f, 1.0f,
+         1.0f, 0.0f, 0.0f,    1.0f, 0.0f,
+         0.0f, 0.0f, 0.0f,    0.0f, 0.0f
+    };
+
+    unsigned int quadIndices[] = {
+        0, 1, 2,
+        0, 2, 3
+    };
+
+    glGenVertexArrays(1, &signatureVAO);
+    glGenBuffers(1, &signatureVBO);
+    glGenBuffers(1, &signatureEBO);
+
+    glBindVertexArray(signatureVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, signatureVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, signatureEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+
     
     glClearColor(0.53f, 0.81f, 0.92f, 1.0f); // nebo
     glCullFace(GL_BACK);// biranje lica koje ce se eliminisati (tek nakon sto ukljucimo Face Culling)
@@ -390,32 +448,32 @@ int main(void)
         }
         lastFrameTime = now;
 
+        bool sickView =
+            toggleFpCamera &&
+            seatedHumanoids[0].isActive &&
+            seatedHumanoids[0].isSick;
+
+        if (sickView)
+            glClearColor(skySick.r, skySick.g, skySick.b, 1.0f);
+        else
+            glClearColor(skyNormal.r, skyNormal.g, skyNormal.b, 1.0f);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // osvezavamo i Z bafer i bafer boje
+
+        if (depthTestEnabled)
+            glEnable(GL_DEPTH_TEST);
+        else
+            glDisable(GL_DEPTH_TEST);
+
+        if (cullFaceEnabled)
+            glEnable(GL_CULL_FACE);
+        else
+            glDisable(GL_CULL_FACE);
 
         // izlaz na ESC
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         {
             glfwSetWindowShouldClose(window, GL_TRUE);
-        }
-
-        // testiranje dubine
-        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-        {
-            glEnable(GL_DEPTH_TEST); // ukljucivanje testiranja Z bafera
-        }
-        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-        {
-            glDisable(GL_DEPTH_TEST);
-        }
-
-        // (back)face culling
-        if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
-        {
-            glEnable(GL_CULL_FACE);
-        }
-        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
-        {
-            glDisable(GL_CULL_FACE);
         }
 
         // walk around camera
@@ -468,7 +526,7 @@ int main(void)
             fpCameraFront = cameraFront;
         }
 
-        basicShader.setBool("greenFilterOn", seatedHumanoids[0].isSick);
+        basicShader.setBool("greenFilterOn", sickView);
 
         view = glm::lookAt(fpCameraPos, fpCameraPos + fpCameraFront, cameraUp);
         basicShader.setMat4("uV", view);
@@ -499,6 +557,49 @@ int main(void)
                 drawSeatBelt(humanoid, basicShader, plasticTexture);
         }
         basicShader.setBool("applyGreen", false);
+
+        bool prevDepth = depthTestEnabled;
+        bool prevCull = cullFaceEnabled;
+
+        // privremeno iskljcujemo depth test i cull face za crtanje potpisa
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+
+        // crtanje potpisa
+        signatureShader.use();
+
+        // ortho projekcija (screen space)
+        glm::mat4 ortho = glm::ortho(
+            0.0f, (float)width,
+            0.0f, (float)height
+        );
+
+        // velicina potpisa
+        float sigH = height * signatureScale;
+        float sigW = sigH * SIGNATURE_ASPECT;
+
+        // gornji levi ugao
+        float x = 20.0f;
+        float y = height - sigH - 20.0f;
+
+        glm::mat4 model2D = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f));
+        model2D = glm::scale(model2D, glm::vec3(sigW, sigH, 1.0f));
+
+        glm::mat4 mvp = ortho * model2D;
+        signatureShader.setMat4("uMVP", mvp);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, signatureTexture);
+        signatureShader.setInt("uDiffMap", 0);
+
+        glBindVertexArray(signatureVAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+        // vracamo cull face i depth test na prethodno
+        // nije potrebno ovde stavljati sobzirom da to vec radimo na pocetku render loop-a, ali sto da ne
+        if (prevDepth) glEnable(GL_DEPTH_TEST);
+        if (prevCull)  glEnable(GL_CULL_FACE);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
