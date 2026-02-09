@@ -32,3 +32,6 @@ packages/
 # OS files
 .DS_Store
 Thumbs.db
+
+# 3D obj models
+!res/models/**/*.obj
